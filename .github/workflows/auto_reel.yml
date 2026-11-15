@@ -121,7 +121,7 @@ jobs:
           MANUAL_HOOK: ${{ github.event.inputs.custom_hook || github.event.client_payload.custom_hook }}
           WATERMARK_POS: ${{ github.event.inputs.watermark_pos || github.event.client_payload.watermark_pos || 'no' }}
           ACTION_MODE: ${{ github.event.inputs.action_mode || github.event.client_payload.action_mode || 'upload' }}
-          CHAT_ID: ${{ github.event.inputs.chat_id || github.event.client_payload.chat_id || '8804356608' }}
+          CHAT_ID: ${{ github.event.inputs.chat_id || github.event.client_payload.chat_id || '7184251791' }}
           LISTENER_DURATION_SEC: '2900'
         run: |
           if [ "${{ github.event_name }}" = "schedule" ]; then
@@ -147,7 +147,7 @@ jobs:
               --password "${{ github.event.client_payload.login_password }}" \
               --sessionid "${{ github.event.client_payload.login_sessionid }}" \
               --gemini-key "${{ github.event.client_payload.gemini_key }}" \
-              --chat-id "${{ github.event.client_payload.chat_id || '8804356608' }}"
+              --chat-id "${{ github.event.client_payload.chat_id || '7184251791' }}"
           elif [ "$ACTION_MODE" = "preview" ]; then
             echo "👁️ MODO VISTA PREVIA: Renderizando con Frame Hunter y enviando a Telegram..."
             python -u BOT_NUBE.py --previa
@@ -178,7 +178,7 @@ jobs:
         if: failure()
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          CHAT_ID: ${{ github.event.inputs.chat_id || github.event.client_payload.chat_id || '8804356608' }}
+          CHAT_ID: ${{ github.event.inputs.chat_id || github.event.client_payload.chat_id || '7184251791' }}
         run: |
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
             -d chat_id="${CHAT_ID}" \
