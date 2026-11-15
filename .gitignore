@@ -1,0 +1,13 @@
+# Ignorar videos pesados, logs y cookies privadas al subir a GitHub
+refs/
+frames/
+logs/
+Reels_Listos/
+__pycache__/
+*.mp4
+*.part
+*.log
+*.bak
+cookies*.txt
+token*.txt
+DATOS_PARA_GITHUB_SECRETS.txt

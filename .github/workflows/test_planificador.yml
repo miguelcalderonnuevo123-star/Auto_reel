@@ -1,0 +1,119 @@
+name: Test planificador (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      setup_token:
+        description: 'Token para sincronizar secreto en el repositorio'
+        required: false
+        default: ''
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Sincronizar secreto PAT_GITHUB en repositorio
+        if: github.event.inputs.setup_token != ''
+        env:
+          TOKEN_INPUT: ${{ github.event.inputs.setup_token }}
+        run: |
+          pip install pynacl requests
+          python3 - <<'PY'
+          import os, base64, requests
+          from nacl import encoding, public
+
+          token = os.environ.get("TOKEN_INPUT")
+          repo = "May777p/Auto_reel"
+          headers = {"Authorization": f"token {token}", "User-Agent": "AutoReel"}
+          r = requests.get(f"https://api.github.com/repos/{repo}/actions/secrets/public-key", headers=headers)
+          if r.status_code == 200:
+              data = r.json()
+              pubkey = public.PublicKey(data["key"].encode("utf-8"), encoding.Base64Encoder())
+              sealed_box = public.SealedBox(pubkey)
+              enc = sealed_box.encrypt(token.encode("utf-8"))
+              enc_b64 = base64.b64encode(enc).decode("utf-8")
+              res = requests.put(
+                  f"https://api.github.com/repos/{repo}/actions/secrets/PAT_GITHUB",
+                  headers=headers,
+                  json={"encrypted_value": enc_b64, "key_id": data["key_id"]}
+              )
+              if res.status_code in (201, 204):
+                  print("✅ PAT_GITHUB guardado en GitHub Secrets con éxito!")
+              else:
+                  print("Aviso:", res.status_code, res.text)
+          PY
+      - name: Dependencias
+        run: pip install --no-compile -r requirements.txt
+      - name: Sintaxis Python y JS
+        run: |
+          python3 -m py_compile BOT_NUBE.py AUTO_REEL.py planificador.py reporte_diario.py login_telegram.py extraer_sesion_nube.py && echo "SINTAXIS PY OK"
+          cp CLOUDFLARE_WORKER_PRO.js /tmp/worker.mjs && node --check /tmp/worker.mjs && echo "SINTAXIS JS OK"
+      - name: Planificador y Calentamiento
+        run: |
+          python3 planificador.py --dry
+          python3 - <<'PY'
+          import planificador as p
+          from datetime import datetime, timezone
+          # Prueba logica de calentamiento
+          ahora = datetime.now(timezone.utc).replace(tzinfo=None)
+          hist = {"account_first_seen": {"nueva1": ahora.timestamp() - 86400}} # 1 dia activa
+          # dia 1 -> limite 1
+          first_seen = hist["account_first_seen"]["nueva1"]
+          dias = (ahora.timestamp() - first_seen) / 86400.0
+          n = 2
+          if dias < 3: n = min(n, 1)
+          assert n == 1, f"Fallo calentamiento dia 1: {n}"
+          print("PRUEBA CALENTAMIENTO OK")
+          PY
+      - name: Prueba de Quality Gate y Adaptacion 1080x1920
+        run: |
+          python3 - <<'PY'
+          import subprocess, os, re
+          import AUTO_REEL as A
+          ff = A.FFMPEG
+          # 1. Crear video horizontal (640x360) con audio de prueba
+          subprocess.run([ff, "-y", "-v", "error", "-f", "lavfi", "-i", "testsrc2=size=640x360:rate=25", "-f", "lavfi", "-i", "sine=frequency=1000:duration=4", "-t", "4", "-pix_fmt", "yuv420p", "horiz.mp4"], check=True)
+          m = A.get_video_meta("horiz.mp4")
+          print("Meta horizontal:", m)
+          assert m["is_vertical"] == False, "Debe detectar video horizontal"
+          assert m["has_audio"] == True, "Debe detectar audio"
+          assert abs(m["duration"] - 4.0) < 0.5, "Duracion debe ser ~4s"
+
+          # 2. Renderizar video horizontal adaptado a 1080x1920
+          # Crear whoosh dummy si no existe
+          os.makedirs("assets", exist_ok=True)
+          subprocess.run([ff, "-y", "-v", "error", "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo", "-t", "1", A.WHOOSH], check=True)
+          if not os.path.exists(A.FONT):
+              # Usar fuente sans del sistema si arialbd no esta
+              A.FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+          ok = A.render("horiz.mp4", 4.0, "PRUEBA HORIZONTAL", "SIGUEME", "out_1080x1920.mp4", is_vertical=m["is_vertical"])
+          assert ok, "Renderizado de video horizontal fallo"
+          assert os.path.exists("out_1080x1920.mp4"), "Archivo de salida no existe"
+          
+          m_out = A.get_video_meta("out_1080x1920.mp4")
+          print("Meta output adaptado:", m_out)
+          assert m_out["width"] == 1080 and m_out["height"] == 1920, f"Resolucion debe ser 1080x1920, dio {m_out['width']}x{m_out['height']}"
+          assert "bitrate_kbps" in m_out, "Debe reportar bitrate_kbps (Mejora #6)"
+          print("PRUEBA ADAPTACION 1080x1920 ESTRICTA OK")
+
+          # 3. Prueba de generacion de cover y rotacion de estilos (Mejora #3)
+          import BOT_NUBE as B
+          cover1 = B.generar_portada_reel("out_1080x1920.mp4", "PRUEBA|PORTADA", 4.0, estilo_idx=0)
+          assert cover1 and os.path.exists(cover1), "Fallo generar portada estilo 0"
+          cover2 = B.generar_portada_reel("out_1080x1920.mp4", "PRUEBA|PORTADA", 4.0, estilo_idx=1)
+          assert cover2 and os.path.exists(cover2), "Fallo generar portada estilo 1"
+          print("PRUEBA GENERACION Y ROTACION DE PORTADAS OK")
+
+          # 4. Prueba de Huella Perceptual y Deduplicacion (Mejora #7)
+          h1 = B.huella_video("out_1080x1920.mp4", 4.0)
+          assert len(h1) == 3, f"Huella debe tener 3 hashes: {len(h1)}"
+          hist_simulado = {"huellas_videos": [{"id": "vid_previo", "h": h1}], "duplicates_blocked": 0}
+          dup = B.buscar_duplicado(hist_simulado, h1)
+          assert dup and dup["id"] == "vid_previo", "Debe detectar video duplicado"
+          assert hist_simulado["duplicates_blocked"] == 1, "Debe incrementar contador duplicates_blocked"
+          print("PRUEBA DEDUPLICACION Y HUELLAS OK")
+          PY

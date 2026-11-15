@@ -1,0 +1,7 @@
+# ==============================================================================
+# COLA DE VIDEOS PARA SUBIR EN HORAS PICO (O A PEDIDO)
+# ==============================================================================
+# Pega aquí los links de TikTok (uno por línea).
+# Opcionalmente puedes poner "|" seguido del Hook personalizado:
+# https://www.tiktok.com/@helloword.visuals/video/123456789 | LA TRENZA PARTE 4
+# ==============================================================================

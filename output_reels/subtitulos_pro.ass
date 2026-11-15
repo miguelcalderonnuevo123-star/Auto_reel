@@ -1,0 +1,19 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Hormozi,Impact,52,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,5,3,2,60,60,480,1
+Style: HormoziYellow,Impact,54,&H0000FFFF,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,6,3,2,60,60,480,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.10,0:00:04.04,HormoziYellow,,0,0,0,,¿ESTÁS BOTANDO COMIDA A LA BASURA?
+Dialogue: 0,0:00:04.04,0:00:08.19,Hormozi,,0,0,0,,ESTE MINI SELLADOR TÉRMICO\nCIERRA CUALQUIER BOLSA EN 1 SEGUNDO
+Dialogue: 0,0:00:08.19,0:00:12.30,HormoziYellow,,0,0,0,,¡SELLA CON CALOR HERMÉTICO\nCOMO SALIDO DE FÁBRICA!
+Dialogue: 0,0:00:12.30,0:00:16.35,Hormozi,,0,0,0,,INCLUYE CUCHILLA OCULTA\nPARA ABRIRLAS SÚPER FÁCIL
+Dialogue: 0,0:00:16.35,0:00:21.39,HormoziYellow,,0,0,0,,CONSIGUELO CASI REGALADO\nCON HASTA 90% DE DESCUENTO
+Dialogue: 0,0:00:21.39,0:00:27.10,HormoziYellow,,0,0,0,,BUSCA MI CÓDIGO: ali815419 EN TEMU\nO EN EL LINK DE MI PERFIL 🎁

@@ -1,0 +1,194 @@
+{
+  "auto_diario": {
+    "activo": false,
+    "dias_semana": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "hora_peru_inicio": 9,
+    "hora_peru_fin": 22
+  },
+  "cuentas": {
+    "cuenta_1": {
+      "activa": false,
+      "auto_diario": false,
+      "auto_story": true,
+      "owner_chat_id": 7184251791,
+      "nombre": "@mi_cuenta_1",
+      "secret_sessionid": "IG_SESSIONID",
+      "tiktok_source_url": "",
+      "tiktok_channel_id": "",
+      "auto_monitor": false,
+      "hashtags_default": [
+        "#reels",
+        "#viral",
+        "#parati",
+        "#humor"
+      ],
+      "cta": "SÍGUEME PARA MÁS VIDEOS|TODOS LOS DÍAS",
+      "auto_comment": "dinamico",
+      "estilo_unico": {
+        "zoom_w": 1090,
+        "zoom_h": 1939,
+        "font_file": "arialbd.ttf",
+        "cta_color": "yellow",
+        "cover_theme": {
+          "name": "Gold",
+          "fill": [
+            15,
+            15,
+            20,
+            215
+          ],
+          "outline": [
+            255,
+            215,
+            0,
+            255
+          ],
+          "accent": [
+            255,
+            230,
+            40,
+            255
+          ]
+        },
+        "speed_factor": 1.0,
+        "trim_start": 0
+      },
+      "device": {
+        "android_version": 30,
+        "android_release": "11",
+        "dpi": "420dpi",
+        "resolution": "1080x2400",
+        "manufacturer": "samsung",
+        "device": "SM-A525F",
+        "model": "Galaxy A52",
+        "cpu": "universal"
+      },
+      "proxy": ""
+    },
+    "cuenta_2": {
+      "activa": false,
+      "auto_diario": false,
+      "auto_story": true,
+      "owner_chat_id": 7184251791,
+      "nombre": "@mi_cuenta_2",
+      "secret_sessionid": "IG_SESSIONID_2",
+      "tiktok_source_url": "",
+      "tiktok_channel_id": "",
+      "auto_monitor": false,
+      "hashtags_default": [
+        "#reels",
+        "#viral",
+        "#parati",
+        "#tendencia"
+      ],
+      "cta": "SÍGUEME PARA MÁS CONTENIDO|CADA DÍA",
+      "auto_comment": "dinamico",
+      "estilo_unico": {
+        "zoom_w": 1100,
+        "zoom_h": 1956,
+        "font_file": "impact.ttf",
+        "cta_color": "cyan",
+        "cover_theme": {
+          "name": "Cyan",
+          "fill": [
+            10,
+            20,
+            35,
+            215
+          ],
+          "outline": [
+            0,
+            235,
+            255,
+            255
+          ],
+          "accent": [
+            0,
+            240,
+            255,
+            255
+          ]
+        },
+        "speed_factor": 1.0,
+        "trim_start": 0.2
+      },
+      "device": {
+        "android_version": 31,
+        "android_release": "12",
+        "dpi": "440dpi",
+        "resolution": "1080x2400",
+        "manufacturer": "xiaomi",
+        "device": "spes",
+        "model": "Redmi Note 11",
+        "cpu": "qcom"
+      },
+      "proxy": ""
+    },
+    "cuenta_3": {
+      "activa": false,
+      "auto_diario": false,
+      "auto_story": true,
+      "owner_chat_id": 7184251791,
+      "nombre": "@mi_cuenta_3",
+      "secret_sessionid": "IG_SESSIONID_3",
+      "tiktok_source_url": "",
+      "tiktok_channel_id": "",
+      "auto_monitor": false,
+      "hashtags_default": [
+        "#reels",
+        "#viral",
+        "#fyp"
+      ],
+      "cta": "SÍGUEME PARA MÁS VIDEOS",
+      "auto_comment": "dinamico",
+      "estilo_unico": {
+        "zoom_w": 1110,
+        "zoom_h": 1973,
+        "font_file": "arialbd.ttf",
+        "cta_color": "green",
+        "cover_theme": {
+          "name": "Green",
+          "fill": [
+            5,
+            25,
+            15,
+            215
+          ],
+          "outline": [
+            57,
+            255,
+            20,
+            255
+          ],
+          "accent": [
+            57,
+            255,
+            20,
+            255
+          ]
+        },
+        "speed_factor": 1.0,
+        "trim_start": 0.2
+      },
+      "device": {
+        "android_version": 34,
+        "android_release": "14",
+        "dpi": "440dpi",
+        "resolution": "1080x2400",
+        "manufacturer": "xiaomi",
+        "device": "garnet",
+        "model": "Redmi Note 13 Pro",
+        "cpu": "qcom"
+      },
+      "proxy": ""
+    }
+  }
+}

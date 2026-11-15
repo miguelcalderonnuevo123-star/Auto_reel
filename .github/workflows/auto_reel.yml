@@ -1,0 +1,185 @@
+name: Auto Reel TikTok a Instagram
+
+on:
+  # Optimización de minutos GitHub Actions (Ahorro ~800 min/mes):
+  # El cron horario se delega a Cloudflare Worker (100% gratis), que evalúa el planificador sin costo
+  # y solo despierta este workflow vía repository_dispatch (cron_auto) cuando realmente hay un Reel por publicar.
+  schedule:
+    # Solo 1 ejecución diaria a las 13:00 UTC (08:00 AM Perú) para reporte de salud y verificación de sesiones (~30 min/mes)
+    - cron: '0 13 * * *'
+  repository_dispatch:
+    types: [telegram_link, telegram_login, cron_auto]
+  workflow_dispatch:
+    inputs:
+      target_account:
+        description: '1) ¿A que cuenta de Instagram subir?'
+        required: false
+        default: 'frutnovelas776'
+        type: choice
+        options:
+          - frutnovelas776
+          - novelas_frutosass
+          - frutnovelas777
+          - novel_asanimadas
+          - frutastorias_tv
+          - historias_frutales_hd
+          - fruticuentos_oficial
+          - novelas_frutas_pro
+          - frutidramas_top
+          - reino_frutosas
+          - todas
+      video_url:
+        description: '2) Link de TikTok a subir ahora (vacio = activar escuchador en vivo de Telegram)'
+        required: false
+        default: ''
+      custom_hook:
+        description: '3) Texto del Hook opcional (vacio = automatico de la descripcion de TikTok)'
+        required: false
+        default: ''
+      watermark_pos:
+        description: '4) Tapar marca de agua (por defecto: no)'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - no
+          - auto
+          - arriba
+          - abajo
+      action_mode:
+        description: '5) Modo de accion (upload = publicar directo | preview = enviar vista previa a Telegram)'
+        required: false
+        default: 'upload'
+        type: choice
+        options:
+          - upload
+          - preview
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.client_payload.video_url || github.run_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  procesar-y-subir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - name: Descargar código del repositorio (Turbo Clone)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Planificador diario (decide si alguna cuenta toca publicar)
+        id: plan
+        if: github.event_name == 'schedule'
+        run: |
+          if [ "${{ github.event.schedule }}" = "0 13 * * *" ]; then
+            echo "modo=reporte" >> "$GITHUB_OUTPUT"
+            echo "cuenta=reporte" >> "$GITHUB_OUTPUT"
+          else
+            python3 planificador.py
+            echo "modo=publicar" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configurar Python 3.11
+        if: github.event_name != 'schedule' || steps.plan.outputs.cuenta != ''
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Instalar librerías en modo Turbo (Sin compilar bytecode)
+        if: github.event_name != 'schedule' || steps.plan.outputs.cuenta != ''
+        run: |
+          pip install --no-compile -r requirements.txt
+
+      - name: Ejecutar en la Nube (Subida directa o Escuchador en Tiempo Real de Telegram)
+        if: github.event_name != 'schedule' || steps.plan.outputs.cuenta != ''
+        env:
+          IG_SESSIONID: ${{ secrets.IG_SESSIONID }}
+          IG_SESSIONID_2: ${{ secrets.IG_SESSIONID_2 }}
+          IG_SESSIONID_3: ${{ secrets.IG_SESSIONID_3 }}
+          IG_SESSIONID_4: ${{ secrets.IG_SESSIONID_4 }}
+          IG_SESSIONID_5: ${{ secrets.IG_SESSIONID_5 }}
+          IG_SESSIONID_6: ${{ secrets.IG_SESSIONID_6 }}
+          IG_SESSIONID_7: ${{ secrets.IG_SESSIONID_7 }}
+          IG_SESSIONID_8: ${{ secrets.IG_SESSIONID_8 }}
+          IG_SESSIONID_9: ${{ secrets.IG_SESSIONID_9 }}
+          IG_SESSIONID_10: ${{ secrets.IG_SESSIONID_10 }}
+          IG_USERNAME: ${{ secrets.IG_USERNAME }}
+          IG_PASSWORD: ${{ secrets.IG_PASSWORD }}
+          TIKTOK_COOKIES: ${{ secrets.TIKTOK_COOKIES }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          PAT_GITHUB: ${{ secrets.PAT_GITHUB }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TARGET_ACCOUNT: ${{ github.event.inputs.target_account || github.event.client_payload.target_account || 'frutnovelas776' }}
+          MANUAL_URL: ${{ github.event.inputs.video_url || github.event.client_payload.video_url }}
+          MANUAL_HOOK: ${{ github.event.inputs.custom_hook || github.event.client_payload.custom_hook }}
+          WATERMARK_POS: ${{ github.event.inputs.watermark_pos || github.event.client_payload.watermark_pos || 'no' }}
+          ACTION_MODE: ${{ github.event.inputs.action_mode || github.event.client_payload.action_mode || 'upload' }}
+          CHAT_ID: ${{ github.event.inputs.chat_id || github.event.client_payload.chat_id || '8804356608' }}
+          LISTENER_DURATION_SEC: '2900'
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            if [ "${{ steps.plan.outputs.modo }}" = "reporte" ]; then
+              echo "📊 REPORTE DIARIO + SALUD DE SESIONES..."
+              python -u BOT_NUBE.py --reporte
+            else
+              echo "🤖 PILOTO AUTOMATICO: publicando en @${{ steps.plan.outputs.cuenta }}..."
+              python -u BOT_NUBE.py --cuenta "${{ steps.plan.outputs.cuenta }}" --auto-diario
+            fi
+          elif [ "${{ github.event.action }}" = "cron_auto" ] || [ "${{ github.event.client_payload.action_mode }}" = "cron_auto" ]; then
+            echo "🤖 PILOTO AUTOMATICO (Disparado por Cloudflare Smart Cron)..."
+            python -u BOT_NUBE.py --auto-diario
+          elif [ -n "${{ github.event.client_payload.login_account }}" ]; then
+            echo "🔐 MODO LOGIN DIRECTO DESDE TELEGRAM..."
+            if [ -n "${{ github.event.client_payload.login_password }}" ]; then
+              pip install playwright
+              python -m playwright install chromium --with-deps
+            fi
+            python -u login_telegram.py \
+              --account "${{ github.event.client_payload.login_account }}" \
+              --username "${{ github.event.client_payload.login_username }}" \
+              --password "${{ github.event.client_payload.login_password }}" \
+              --sessionid "${{ github.event.client_payload.login_sessionid }}" \
+              --gemini-key "${{ github.event.client_payload.gemini_key }}" \
+              --chat-id "${{ github.event.client_payload.chat_id || '8804356608' }}"
+          elif [ "$ACTION_MODE" = "preview" ]; then
+            echo "👁️ MODO VISTA PREVIA: Renderizando con Frame Hunter y enviando a Telegram..."
+            python -u BOT_NUBE.py --previa
+          elif [ -n "$MANUAL_URL" ]; then
+            echo "🚀 MODO MANUAL: Subiendo video enviado por Telegram a $TARGET_ACCOUNT..."
+            python -u BOT_NUBE.py
+          else
+            echo "⏰ MODO AUTOMATICO / TEST: Ejecutando subida para @$TARGET_ACCOUNT..."
+            python -u BOT_NUBE.py --cuenta "$TARGET_ACCOUNT" --marca "$WATERMARK_POS"
+          fi
+
+      - name: Guardar historial y cola actualizada en el repositorio
+        if: always() && (github.event_name != 'schedule' || steps.plan.outputs.cuenta != '')
+        run: |
+          git config user.name "AutoReel Bot"
+          git config user.email "bot@autoreel.local"
+          git add historial_bot.json cola_videos.txt cuentas_granja.json
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: actualizar historial y cuentas [skip ci]"
+            for i in 1 2 3; do
+              git pull --rebase -X theirs origin main && git push && break
+              echo "Reintentando push ($i/3)..."
+              sleep 2
+            done
+          fi
+
+      - name: Avisar por Telegram si la ejecución falló
+        if: failure()
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ github.event.inputs.chat_id || github.event.client_payload.chat_id || '8804356608' }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+            -d chat_id="${CHAT_ID}" \
+            --data-urlencode text="🚨 Falló una ejecución de AutoReel (${{ github.event_name }}, run #${{ github.run_number }}). Revisa: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" > /dev/null || true
