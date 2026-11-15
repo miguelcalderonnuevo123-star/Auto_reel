@@ -15,22 +15,23 @@
   },
   "cuentas": {
     "cuenta_1": {
-      "activa": false,
+      "activa": true,
       "auto_diario": false,
       "auto_story": true,
       "owner_chat_id": 7184251791,
-      "nombre": "@mi_cuenta_1",
+      "nombre": "@aventuras56_6",
       "secret_sessionid": "IG_SESSIONID",
       "tiktok_source_url": "",
       "tiktok_channel_id": "",
       "auto_monitor": false,
       "hashtags_default": [
+        "#aventuras",
         "#reels",
         "#viral",
         "#parati",
-        "#humor"
+        "#tendencia"
       ],
-      "cta": "SÍGUEME PARA MÁS VIDEOS|TODOS LOS DÍAS",
+      "cta": "SÍGUEME PARA MÁS AVENTURAS|TODOS LOS DÍAS",
       "auto_comment": "dinamico",
       "estilo_unico": {
         "zoom_w": 1090,
