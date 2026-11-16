@@ -1200,37 +1200,41 @@ def generar_comentario_viral(parte_num=1, custom_comment="", tiene_partes=False,
 
     if es_biblia:
         plantillas = [
-            "¿Qué enseñanza te deja esta palabra hoy? Escribe 'Amén' si confías en los planes de Dios 🙏✨",
-            "Si esta reflexión tocó tu vida hoy, deja tu 'Amén' y compártela con alguien que necesite fe ❤️📖",
-            "¿Alguna vez Dios te libró de una prueba difícil como esta? Te leo en los comentarios con fe 👇🕊️",
-            "Dios siempre llega a tiempo. Escribe 'Amén' y sígueme para recibir palabra de bendición cada día 🙏✝️",
-            "Declaro bendición y paz sobre tu vida y tu familia hoy. Deja tu 'Amén' en los comentarios 👇✨",
-            "¿Cuál es tu petición de oración hoy? Estaré orando por cada comentario con fe 🙏❤️"
+            "Que esta palabra les dé mucha paz hoy. Amén 🙏",
+            "A veces Dios permite pruebas para enseñarnos algo más grande. Un abrazo a todos ❤️",
+            "Un recordatorio que necesitaba escuchar hoy... Dios los bendiga ✨",
+            "La fe mueve montañas cuando más lo necesitamos. Amén 🙏✨",
+            "Dios nunca llega tarde ni temprano, siempre a tiempo. Bendiciones a todos 🙏",
+            "Que Dios guarde a sus familias en este día. Amén ❤️"
         ]
     elif not tiene_partes:
         plantillas = [
-            "Dime la verdad: ¿quién crees que tuvo la culpa aquí? 😱 Los leo a todos en los comentarios 👇",
-            "Si estuvieras en su lugar, ¿qué habrías hecho tú? 😳 Deja tu opinión abajo y comparte tu teoría 🔥",
-            "Del 1 al 10: ¿qué tan justa fue esta decisión? 🤔 Comenta tu puntaje abajo 👇",
-            "¿Crees que hizo lo correcto o se pasó de la raya? 😬 Los leo en los comentarios y no olvides seguirme ✨",
-            "¿Te esperabas ese desenlace? 😱 Comenta tu reacción abajo y sígueme para más historias 🔥👇",
-            "Dime sinceramente: ¿habrías tomado la misma decisión al final? 👀 Déjalo en los comentarios 👇",
+            "Confirmamos que lo del final nadie se lo esperaba? 😂",
+            "No sé si ponerme de un lado o del otro sinceramente 💀",
+            "Díganme que no fui el único que se quedó pensando en lo que pasó al final 👀",
+            "Yo en su lugar creo que no habría aguantado tanto jajaja",
+            "El que notó el detalle del principio entendió todo 😂",
+            "Digan lo que quieran pero al final tenía razón 😂",
+            "Qué opinan ustedes de cómo terminó todo? 🤔",
+            "El verdadero giro inesperado al final 😳",
+            "Sinceramente me dejó pensando...",
+            "A ver quién es el primero que adivina qué pasó ahí 😂"
         ]
     elif parte_num == 1:
         plantillas = [
-            f"😱 ¿Qué crees que va a pasar? Comenta 'PARTE {sig_parte}' y sígueme para ver la continuación hoy 🔥👇",
-            f"Dime la verdad: ¿estuvo bien lo que hizo o se pasó? 😳 Comenta 'PARTE {sig_parte}' y sígueme para no perdértela 👀👇",
-            f"¡La historia se pone más intensa! 🔥 Comenta 'PARTE {sig_parte}' y sígueme, ¡ya la estoy preparando! 🚀👇",
-            f"Si estuvieras en su lugar, ¿qué habrías hecho tú? 😬👇 Deja tu teoría y comenta 'PARTE {sig_parte}' para avisarte cuando salga ✨",
-            f"¿Quieres saber qué pasa después? 😱 Comenta 'PARTE {sig_parte}' y sígueme para ver cómo sigue todo 🔥👇",
+            "Ya estoy terminando de editar la siguiente parte, en un rato la subo 👀",
+            "La que se viene ahora está todavía más fuerte jajaja 😂",
+            "Qué creen que pase ahora? 👀 En un rato subo la continuación",
+            "No se imaginan lo que pasa en la siguiente parte 😳",
+            "Terminando de cargar la continuación, atentos que ya casi sale 🔥"
         ]
     else:
         plantillas = [
-            f"👀 ¿Te esperabas esto al final? Comenta 'PARTE {sig_parte}' y sígueme porque ya sale la continuación 🔥👇",
-            f"¿Quién crees que tiene la culpa aquí? 😱 Comenta 'PARTE {sig_parte}' y sígueme para ver qué pasa en el próximo video 👇",
-            f"¡Esto se salió de control! 😳 Deja tu comentario con 'PARTE {sig_parte}' y sígueme para ver la continuación hoy mismo 🚀",
-            f"Dime en los comentarios qué harías tú en su lugar 🤔👇 Comenta 'PARTE {sig_parte}' y sígueme para ver el desenlace 🔥",
-            f"¿Crees que hizo lo correcto? 👀 Comenta 'PARTE {sig_parte}' y no olvides seguirme para ver la siguiente parte 👇",
+            "Esto se puso todavía más intenso de lo que esperaba 😳",
+            "Quién más se quedó con la intriga al final? 👀",
+            "Ya casi tengo lista la continuación, un momento y la subo 🙏",
+            "Ustedes qué habrían hecho en ese momento? 😂",
+            "El final de esta parte me dejó sin palabras 💀"
         ]
 
     default_antiguo = "¿Qué harías tú en su lugar? 😱👇 Sígueme porque ya estoy subiendo la siguiente parte 🔥"
