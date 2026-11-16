@@ -323,9 +323,7 @@ def build_filters(dur, hook, cta, zoom_w=1090, zoom_h=1939, cta_color="yellow", 
         v_chain = f"[0:v]split=2[v_bg][v_fg];{bg}{fg}{ov}"
     return (
         f"{v_chain}"
-        f"[0:a]{atempo_filt}{audio_norm}[av];"
-        f"[1:a]adelay=200|200,volume=0.35[sfx];"
-        f"[av][sfx]amix=inputs=2:duration=first:dropout_transition=1[a]"
+        f"[0:a]{atempo_filt}{audio_norm}[a]"
     )
 
 
@@ -355,7 +353,7 @@ def render(src, dur, hook, cta, out_path, zoom_w=1090, zoom_h=1939, cta_color="y
     fc = build_filters(dur, hook, cta, zoom_w=zoom_w, zoom_h=zoom_h, cta_color=cta_color, speed_factor=speed_factor, is_vertical=is_vertical, font_file=font_file)
     common = [
         FFMPEG, "-y", "-ss", f"{trim_start:.2f}", "-t", f"{dur:.2f}",
-        "-i", src, "-i", WHOOSH,
+        "-i", src,
         "-filter_complex", fc,
         "-map", "[v]", "-map", "[a]",
         "-map_metadata", "-1",
