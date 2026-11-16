@@ -2,6 +2,7 @@
   "account_url": "https://www.tiktok.com/@helloword.visuals",
   "channel_id": "MS4wLjABAAAACLle2hko75dXsCGmRLFp0i-pA-FOH-Ds8uJ7Nr7ETr6Mt22MsXZYMKxKmRjH3R7K",
   "processed_ids": [
+    "7596817523983666454",
     "7597336922683493654",
     "7597103016000441622",
     "7706421808404106510",
@@ -97,9 +98,21 @@
     "se perdieron en una selva prohibida": 1,
     "la estatua, parte 1": 1,
     "objetos 3d que cobran vida": 1,
-    "objetos que hablan 3d": 1
+    "objetos que hablan 3d": 1,
+    "objetos que se quejan": 1
   },
   "history": [
+    {
+      "id": "7596817523983666454",
+      "date": "2026-11-16 02:06:10",
+      "title": "Objetos que se quejan #objetos #hogar #fvpシ #viral",
+      "hook": "OBJETOS|QUE SE QUEJAN",
+      "caption_ig": "Objetos que se quejan #objetos #hogar #fvpシ #viral #aventuras",
+      "accounts": [
+        "cuenta_1"
+      ],
+      "ig_link": "• @aventuras56_6: https://www.instagram.com/reel/DfyPYfiMMyt/"
+    },
     {
       "id": "7597336922683493654",
       "date": "2026-11-16 00:50:23",
@@ -752,7 +765,7 @@
     "frutnovelas777": 1794698751.277388,
     "novel_asanimadas": 1794669599.2287304,
     "novelas_frutosass": 1794703815.651194,
-    "cuenta_1": 1794790217.7699165
+    "cuenta_1": 1794794764.8740988
   },
   "account_first_seen": {
     "frutnovelas776": 1794571550.604157,
@@ -762,6 +775,16 @@
     "cuenta_1": 1794789567.0865886
   },
   "huellas_videos": [
+    {
+      "id": "7596817523983666454",
+      "h": [
+        17221462525853133569,
+        16343065635130755326,
+        15872482118721216259
+      ],
+      "ts": 1794794770,
+      "date": "2026-11-16 02:06"
+    },
     {
       "id": "7597336922683493654",
       "h": [
