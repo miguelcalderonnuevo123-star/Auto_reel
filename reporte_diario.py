@@ -81,9 +81,16 @@ def main():
     )
     if caidas:
         msg += (
-            "\n\n⚠️ Renueva estas sesiones con /login en este chat antes de la próxima publicación: "
-            + ", ".join(f"@{c}" for c in caidas)
+            "\n\n🚨 <b>ALERTA DE SESIÓN:</b> Renueva estas cuentas antes de la próxima publicación:\n"
+            + "\n".join(f"• <b>@{c}</b> (Usa <code>/login {c}</code> o <code>/sesion {c}</code>)" for c in caidas)
         )
+        msg_alerta = (
+            "🚨 <b>ALERTA CRÍTICA: SESIÓN DE INSTAGRAM CADUCADA</b>\n\n"
+            f"Se detectaron <b>{len(caidas)}</b> cuenta(s) con sesión desconectada o expirada:\n"
+            + "\n".join([f"• <b>@{c}</b>" for c in caidas])
+            + "\n\n👉 <i>Para reconectar de inmediato sin abrir la PC, usa el comando <code>/conectar</code> o presiona '🔑 Conectar Cuenta' en el menú.</i>"
+        )
+        BOT.enviar_mensaje_telegram(chat_id, msg_alerta)
     chat_id = historial.get("telegram_chat_id")
     for cfg in granja.values():
         chat_id = chat_id or cfg.get("owner_chat_id")
