@@ -254,6 +254,23 @@ def get_duration(path):
 
 
 def build_filters(dur, hook, cta, zoom_w=1090, zoom_h=1939, cta_color="yellow", speed_factor=1.0, is_vertical=True, font_file="arialbd.ttf"):
+    import random
+
+    # Mejora 1: Micro-aceleración dinámica anti-detección (1.03x a 1.06x)
+    # Aumenta retención en los primeros segundos y modifica hashes únicos de audio y video
+    if speed_factor is None or abs(speed_factor - 1.0) < 0.005:
+        speed_factor = round(random.uniform(1.03, 1.06), 3)
+
+    # Mejora 4: Rotación dinámica de colores de CTA y fuentes de alto impacto
+    PALETA_VIRAL = ["#FFE600", "#00F0FF", "#39FF14", "#FFFFFF", "#FF5252"]
+    FUENTES_VIRALES = ["arialbd.ttf", "impact.ttf", "segoeuib.ttf", "trebucbd.ttf"]
+
+    if cta_color in ("yellow", "#FFE600", None, ""):
+        cta_color = random.choice(PALETA_VIRAL)
+
+    if font_file in ("arialbd.ttf", None, ""):
+        font_file = random.choice(FUENTES_VIRALES)
+
     font_p = get_font_file(font_file)
     hook_lines = [l.strip() for l in hook.split("|") if l.strip()]
     # Auto-escala dinámica del tamaño de letra para que títulos largos nunca se salgan de pantalla
