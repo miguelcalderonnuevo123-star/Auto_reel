@@ -294,7 +294,7 @@ def build_filters(dur, hook, cta, zoom_w=1090, zoom_h=1939, cta_color="yellow", 
             f":enable='between(t,0,2.5)',"
         )
 
-    # CTA estrictamente para los últimos 3 segundos del video
+    # CTA estrictamente para los últimos 3 segundos del video hasta el final absoluto
     t_cta = max(0.0, dur - 3.0)
 
     # Si el CTA no viene dividido con '|' y tiene más de 18 caracteres, dividir en 2 líneas simétricas
@@ -322,7 +322,7 @@ def build_filters(dur, hook, cta, zoom_w=1090, zoom_h=1939, cta_color="yellow", 
             f"drawtext=fontfile='{font_p}':text='{ct}'"
             f":fontsize={cta_fs}:fontcolor={color_cta}:borderw=6:bordercolor=black"
             f":x=(w-text_w)/2:y=h-400+{i * (cta_fs + 14)}"
-            f":enable='between(t,{t_cta:.2f},{dur:.2f})',"
+            f":enable='gte(t,{t_cta:.2f})',"
         )
     cta_filt = cta_filt.rstrip(",")
 
@@ -398,8 +398,9 @@ def render(src, dur, hook, cta, out_path, zoom_w=1090, zoom_h=1939, cta_color="y
     import random
     # Capa 4 Anti-Detección: Desincronización de cadencia de fotogramas (FPS Drift)
     fps_val = random.choice(["29.97", "30.03", "29.98", "30.02"])
+    # Procesar el video completo al 100% de inicio a fin (sin recortes artificiales de -ss ni -t)
     common = [
-        FFMPEG, "-y", "-ss", f"{trim_start:.2f}", "-t", f"{dur:.2f}",
+        FFMPEG, "-y",
         "-i", src,
         "-filter_complex", fc,
         "-map", "[v]", "-map", "[a]",
