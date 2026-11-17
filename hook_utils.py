@@ -353,3 +353,95 @@ def generar_comentario_con_gemini(raw_desc, hook="", parte_num=1, tiene_partes=F
 
     return None
 
+
+def generar_copy_reel_con_gemini(raw_desc, hook="", cuenta_id="", hashtags_base=None, api_key=None):
+    """
+    Genera una descripción (Copy) para Instagram Reels con Google Gemini IA optimizada para SEO y retención.
+    Devuelve un texto cautivador de 2-3 líneas con pregunta para debate + hashtags combinados.
+    """
+    key = api_key or os.environ.get("GEMINI_API_KEY", "").strip()
+    texto = limpiar_texto_descripcion(raw_desc)
+    hook_limpio = (hook or "").replace("|", " ").strip()
+
+    # 1. Extraer hashtags dinámicos según el tema
+    hashtags_base = list(hashtags_base or ["#reels", "#viral", "#parati"])
+    hashtags_encontrados = re.findall(r"#\w+", raw_desc or "")
+
+    # Extraer palabras temáticas de la descripción (ej: frutas o emociones)
+    temas_extra = []
+    palabras_desc = (texto + " " + hook_limpio).lower()
+    for kw in ["fresa", "manzana", "sandia", "aguacate", "platano", "limon", "naranja", "pera", "uva", "capibara", "amor", "traicion", "desamor", "humor", "reflexion", "fe", "dios", "milagro", "familia", "amigos", "secreto"]:
+        if kw in palabras_desc:
+            temas_extra.append(f"#{kw}")
+
+    # Combinar hashtags: 3 fijos de la cuenta + hasta 2 temáticos dinámicos
+    tags_finales = []
+    for h in hashtags_base[:3] + temas_extra[:2] + hashtags_encontrados[:2]:
+        if h.lower() not in [x.lower() for x in tags_finales]:
+            tags_finales.append(h)
+        if len(tags_finales) >= 5:
+            break
+    tags_str = " ".join(tags_finales)
+
+    # 2. Generar cuerpo con Gemini IA si hay clave
+    cuerpo_copy = None
+    if key and (hook_limpio or texto):
+        es_biblia = any(k in (cuenta_id or "").lower() for k in ["biblia", "cristian", "dios", "fe", "reflexion"])
+        contexto = f"Título: {hook_limpio}\nTrama: {texto}"
+
+        if es_biblia:
+            prompt = (
+                "Eres un redactor experto en Instagram Reels cristianos para @bibliareflexiones.a.\n"
+                f"Datos:\n{contexto}\n\n"
+                "Escribe una descripción breve (máximo 2 a 3 líneas) inspiradora sobre esta reflexión.\n"
+                "REGLAS:\n"
+                "1. Conecta con el mensaje de fe o esperanza del video.\n"
+                "2. Termina con una pregunta cálida o invitación a dejar su 'Amén' en comentarios.\n"
+                "3. Incluye 2 emojis de bendición (🙏, ✨, 📖, ❤️).\n"
+                "4. NO pongas hashtags en tu respuesta.\n"
+                "5. Responde ÚNICAMENTE el texto en español, sin comillas."
+            )
+        else:
+            prompt = (
+                "Eres un redactor experto en Instagram Reels de historias virales y animadas.\n"
+                f"Datos:\n{contexto}\n\n"
+                "Escribe una descripción corta (máximo 2 a 3 líneas) llena de intriga sobre este video.\n"
+                "REGLAS:\n"
+                "1. Resume la situación dramática o curiosa sin dar spoilers del final.\n"
+                "2. Termina con una pregunta directa para que los espectadores comenten (ej: '¿Qué habrías hecho tú? Te leo en comentarios 👇').\n"
+                "3. Incluye 2 emojis naturales (👀, 😱, 🤔, 👇, 🔥).\n"
+                "4. NO pongas hashtags en tu respuesta.\n"
+                "5. Responde ÚNICAMENTE el texto en español, sin comillas."
+            )
+
+        body = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"temperature": 0.4, "maxOutputTokens": 90}
+        }
+        headers = {"Content-Type": "application/json", "x-goog-api-key": key}
+        modelos = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b"]
+        for mod in modelos:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent"
+            try:
+                req = urllib.request.Request(url, data=json.dumps(body).encode("utf-8"), headers=headers, method="POST")
+                with urllib.request.urlopen(req, timeout=6) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    cand = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                    cand = cand.replace('"', '').replace("`", "").strip()
+                    if len(cand) >= 20:
+                        cuerpo_copy = cand
+                        break
+            except Exception:
+                continue
+
+    # 3. Fallback inteligente si Gemini no está o falla
+    if not cuerpo_copy:
+        titulo = hook_limpio if hook_limpio else (texto.capitalize() if texto else "Una historia impactante")
+        es_biblia = any(k in (cuenta_id or "").lower() for k in ["biblia", "cristian", "dios", "fe", "reflexion"])
+        if es_biblia:
+            cuerpo_copy = f"✨ Reflexión: {titulo}.\n\n¿Qué enseñanza deja esta palabra en tu corazón hoy? Déjanos tu Amén en los comentarios 🙏👇"
+        else:
+            cuerpo_copy = f"🎬 {titulo}.\n\nLas cosas no siempre son lo que parecen... ¿Qué habrías hecho tú en esta situación? Te leo abajo 👇👀"
+
+    return f"{cuerpo_copy}\n\n{tags_str}".strip()
+
