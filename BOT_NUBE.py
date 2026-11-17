@@ -539,12 +539,80 @@ def cazar_mejor_fotograma(video_path, dur, min_t=1.0):
     return mejor_t
 
 
-def generar_portada_reel(video_path, hook_txt, dur, estilo_idx=0, raw_video_path=None, cfg_cuenta=None, cuenta_id=None):
+# ============================================================
+#   ESTILOS VIRALES DINÁMICOS (ROTACIÓN POR PUBLICACIÓN)
+# ============================================================
+ESTILOS_VIRALES = [
+    {
+        "name": "Dorado Viral",
+        "font": "impact.ttf",
+        "accent_hex": "#FFE600",
+        "fill": (15, 15, 20, 215),
+        "outline": (255, 215, 0, 255),
+        "accent": (255, 230, 40, 255),
+    },
+    {
+        "name": "Cyber Cyan",
+        "font": "trebucbd.ttf",
+        "accent_hex": "#00F0FF",
+        "fill": (10, 20, 35, 215),
+        "outline": (0, 235, 255, 255),
+        "accent": (0, 240, 255, 255),
+    },
+    {
+        "name": "Lima Neon",
+        "font": "arialbd.ttf",
+        "accent_hex": "#39FF14",
+        "fill": (5, 25, 15, 215),
+        "outline": (57, 255, 20, 255),
+        "accent": (57, 255, 20, 255),
+    },
+    {
+        "name": "Fuego Coral",
+        "font": "impact.ttf",
+        "accent_hex": "#FF5252",
+        "fill": (28, 12, 12, 215),
+        "outline": (255, 82, 82, 255),
+        "accent": (255, 82, 82, 255),
+    },
+    {
+        "name": "Magenta Neon",
+        "font": "segoeuib.ttf",
+        "accent_hex": "#D946EF",
+        "fill": (25, 10, 35, 215),
+        "outline": (217, 70, 239, 255),
+        "accent": (255, 0, 127, 255),
+    },
+]
+
+
+def obtener_siguiente_estilo(cuenta_id, historial=None):
+    """
+    Calcula el siguiente estilo viral (fuente + paleta) para una cuenta específica,
+    garantizando que publicaciones consecutivas de la misma cuenta NUNCA se repitan.
+    """
+    historial = historial if isinstance(historial, dict) else {}
+    posts_cuenta = sum(
+        1 for h in (historial.get("history") or [])
+        if cuenta_id in (h.get("accounts") or [])
+    )
+    rot_offset = int((historial.get("account_style_rot") or {}).get(cuenta_id, 0))
+    idx = (posts_cuenta + rot_offset) % len(ESTILOS_VIRALES)
+
+    # Avanzar el offset para la siguiente publicación de esta cuenta
+    if "account_style_rot" not in historial or not isinstance(historial["account_style_rot"], dict):
+        historial["account_style_rot"] = {}
+    historial["account_style_rot"][cuenta_id] = rot_offset + 1
+
+    return ESTILOS_VIRALES[idx]
+
+
+def generar_portada_reel(video_path, hook_txt, dur, estilo_idx=0, raw_video_path=None, cfg_cuenta=None, cuenta_id=None, estilo_rotativo=None):
     """
     Usa Frame Hunter sobre el video limpio (sin textos duplicados) y estampa
     un título de alto impacto en el tercio superior de la zona 1:1 de Instagram.
     Deja el centro completamente libre para no tapar los rostros de los personajes.
-    Aplica la tipografía y paleta de colores exclusiva de cada cuenta de la granja.
+    Aplica tipografía y paleta viral rotativa coordinada con el video.
     Devuelve la ruta del archivo .jpg.
     """
     video_origen = raw_video_path if (raw_video_path and os.path.exists(raw_video_path)) else video_path
@@ -571,20 +639,19 @@ def generar_portada_reel(video_path, hook_txt, dur, estilo_idx=0, raw_video_path
         overlay = Image.new("RGBA", (w, h), (0, 0, 0, 0))
         draw = ImageDraw.Draw(overlay)
 
-        # 1. Resolver tema y fuente exclusiva de la cuenta
-        cfg_estilo = None
-        font_file = "arialbd.ttf"
-        if cfg_cuenta and isinstance(cfg_cuenta, dict):
-            estilo_c = cfg_cuenta.get("estilo_unico") or {}
-            font_file = estilo_c.get("font_file") or "arialbd.ttf"
-            theme_dict = estilo_c.get("cover_theme")
-            if theme_dict:
-                cfg_estilo = {
-                    "fill": tuple(theme_dict.get("fill", [15, 15, 20, 215])),
-                    "outline": tuple(theme_dict.get("outline", [255, 215, 0, 255])),
-                    "accent": tuple(theme_dict.get("accent", [255, 230, 40, 255])),
-                    "name": theme_dict.get("name", "Custom")
-                }
+        # 1. Resolver tema y fuente rotativa coordinada
+        if estilo_rotativo and isinstance(estilo_rotativo, dict):
+            cfg_estilo = {
+                "fill": tuple(estilo_rotativo.get("fill", (15, 15, 20, 215))),
+                "outline": tuple(estilo_rotativo.get("outline", (255, 215, 0, 255))),
+                "accent": tuple(estilo_rotativo.get("accent", (255, 230, 40, 255))),
+                "name": estilo_rotativo.get("name", "Viral"),
+            }
+            font_file = estilo_rotativo.get("font") or "arialbd.ttf"
+        else:
+            estilo_sel = ESTILOS_VIRALES[estilo_idx % len(ESTILOS_VIRALES)]
+            cfg_estilo = estilo_sel
+            font_file = estilo_sel.get("font") or "arialbd.ttf"
 
         font_path = os.path.join(ASSETS_DIR, font_file)
         if not os.path.exists(font_path) and os.name == "nt":
@@ -593,15 +660,6 @@ def generar_portada_reel(video_path, hook_txt, dur, estilo_idx=0, raw_video_path
                 font_path = p_win
         if not os.path.exists(font_path):
             font_path = os.path.join(ASSETS_DIR, "arialbd.ttf")
-
-        if not cfg_estilo:
-            estilos = [
-                {"fill": (15, 15, 20, 215), "outline": (255, 215, 0, 255), "accent": (255, 230, 40, 255), "name": "Gold"},
-                {"fill": (10, 20, 35, 215), "outline": (0, 235, 255, 255), "accent": (0, 240, 255, 255), "name": "Cyan"},
-                {"fill": (5, 25, 15, 215), "outline": (255, 56, 92, 255), "accent": (57, 255, 20, 255), "name": "Watermelon"},
-                {"fill": (25, 10, 35, 215), "outline": (217, 0, 255, 255), "accent": (255, 0, 127, 255), "name": "Magenta"},
-            ]
-            cfg_estilo = estilos[estilo_idx % len(estilos)]
 
         lineas = [l.strip() for l in hook_txt.split("|") if l.strip()]
         if not lineas:
@@ -1815,7 +1873,9 @@ def main():
         estilo = cfg_c.get("estilo_unico") or {}
         cta_cuenta = cfg_c.get("cta") or AUTO_REEL.CTA
 
-        print(f"\n  >>> Procesando copia única para [{cid.upper()}] ({cfg_c.get('nombre', cid)})...")
+        # Obtenemos el estilo rotativo dinámico para este post de esta cuenta (anti-repetición)
+        estilo_post = obtener_siguiente_estilo(cid, historial)
+        print(f"\n  >>> Procesando copia única para [{cid.upper()}] ({cfg_c.get('nombre', cid)}) | Estilo: {estilo_post['name']} ({estilo_post['font']}, {estilo_post['accent_hex']})...")
         nombre = f"REEL_{cid}_{info['serie_archivo']}" + ("" if info["parte"] in (0, 1) else f" parte {info['parte']}")
         out_path = os.path.join(AUTO_REEL.OUT_DIR, nombre + ".mp4")
         archivos_temporales.append(out_path)
@@ -1824,8 +1884,8 @@ def main():
             src, dur, info["hook"], cta_cuenta, out_path,
             zoom_w=estilo.get("zoom_w", 1090),
             zoom_h=estilo.get("zoom_h", 1939),
-            cta_color=estilo.get("cta_color", "yellow"),
-            font_file=estilo.get("font_file", "arialbd.ttf"),
+            cta_color=estilo_post["accent_hex"],
+            font_file=estilo_post["font"],
             speed_factor=estilo.get("speed_factor", 1.0),
             trim_start=estilo.get("trim_start", 0.0),
             is_vertical=v_meta.get("is_vertical", True),
@@ -1836,12 +1896,12 @@ def main():
 
         aplicar_placa_marca(out_path, modo_marca=modo_marca)
         AUTO_REEL.limpiar_metadatos(out_path)
-        # Portada con la identidad visual exclusiva de la cuenta (colores y tipografía propia)
-        estilo_rot = len(historial.get("history", []))
+        # Portada con la identidad visual rotativa coordinada con el video
         cover_jpg = generar_portada_reel(
             out_path, info["hook"], dur,
-            estilo_idx=estilo_rot, raw_video_path=src,
-            cfg_cuenta=cfg_c, cuenta_id=cid
+            estilo_idx=idx_c, raw_video_path=src,
+            cfg_cuenta=cfg_c, cuenta_id=cid,
+            estilo_rotativo=estilo_post
         )
         archivos_temporales.extend([cover_jpg, out_path + ".jpg"])
 
