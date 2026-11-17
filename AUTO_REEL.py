@@ -329,18 +329,41 @@ def build_filters(dur, hook, cta, zoom_w=1090, zoom_h=1939, cta_color="yellow", 
     pts_filt = f",setpts={1.0/speed_factor:.4f}*PTS" if abs(speed_factor - 1.0) > 0.001 else ""
     atempo_filt = f"atempo={speed_factor:.4f}," if abs(speed_factor - 1.0) > 0.001 else ""
 
+    # Capa 1 Anti-Detección: Desplazamiento dinámico de coordenadas (Pixel Jitter)
+    # Agrandamos ligeramente con margen seguro para cortar con desplazamiento aleatorio
+    eff_zoom_w = max(int(zoom_w or 1090), 1100)
+    eff_zoom_h = max(int(zoom_h or 1939), 1956)
+    extra_w = max(0, eff_zoom_w - TARGET_W)
+    extra_h = max(0, eff_zoom_h - TARGET_H)
+    base_x = extra_w // 2
+    base_y = extra_h // 2
+    jitter_x = max(0, min(extra_w, base_x + random.randint(-5, 5)))
+    jitter_y = max(0, min(extra_h, base_y + random.randint(-8, 8)))
+
+    # Capa 2 Anti-Detección: Alteración sutil de colorimetría (Color Shift / Gamma)
+    c_contrast = round(random.uniform(1.025, 1.045), 3)
+    c_brightness = round(random.uniform(0.005, 0.012), 3)
+    c_saturation = round(random.uniform(1.03, 1.06), 3)
+    c_gamma = round(random.uniform(0.99, 1.015), 3)
+    eq_filt = f"eq=contrast={c_contrast}:brightness={c_brightness}:saturation={c_saturation}:gamma={c_gamma},"
+
+    # Capa 3 Anti-Detección: Micro-ruido temporal de sensor (Micro-Grain Dithering)
+    # 1.5% de grano de sensor que rompe el hash perceptual por bloques de Meta
+    noise_filt = "noise=alls=2:allf=t+u,"
+
     # En la nube (Linux sin GPU), bilinear es 3x más rápido que bicubic y afir/volume es instantáneo frente a loudnorm de 2 pasadas
     scale_flag = "bilinear" if os.name != "nt" else "bicubic"
     audio_norm = "dynaudnorm=f=150:g=15" if os.name != "nt" else "loudnorm=I=-14:TP=-1.0:LRA=7"
 
     if is_vertical:
-        vf = (f"scale={zoom_w}:{zoom_h}:flags={scale_flag},crop={TARGET_W}:{TARGET_H},"
-              + hook_filt + cta_filt + pts_filt)
+        vf = (f"scale={eff_zoom_w}:{eff_zoom_h}:flags={scale_flag},"
+              f"crop={TARGET_W}:{TARGET_H}:{jitter_x}:{jitter_y},"
+              + eq_filt + noise_filt + hook_filt + cta_filt + pts_filt)
         v_chain = f"[0:v]{vf}[v];"
     else:
         bg = f"[v_bg]scale={TARGET_W}:{TARGET_H}:force_original_aspect_ratio=increase:flags={scale_flag},crop={TARGET_W}:{TARGET_H},boxblur=25:5[bg];"
         fg = f"[v_fg]scale={TARGET_W}:-2:flags={scale_flag}[fg];"
-        ov = f"[bg][fg]overlay=0:(H-h)/2,{hook_filt}{cta_filt}{pts_filt}[v];"
+        ov = f"[bg][fg]overlay=0:(H-h)/2,{eq_filt}{noise_filt}{hook_filt}{cta_filt}{pts_filt}[v];"
         v_chain = f"[0:v]split=2[v_bg][v_fg];{bg}{fg}{ov}"
     return (
         f"{v_chain}"
@@ -372,6 +395,9 @@ def limpiar_metadatos(path):
 
 def render(src, dur, hook, cta, out_path, zoom_w=1090, zoom_h=1939, cta_color="yellow", speed_factor=1.0, trim_start=0.0, is_vertical=True, font_file="arialbd.ttf"):
     fc = build_filters(dur, hook, cta, zoom_w=zoom_w, zoom_h=zoom_h, cta_color=cta_color, speed_factor=speed_factor, is_vertical=is_vertical, font_file=font_file)
+    import random
+    # Capa 4 Anti-Detección: Desincronización de cadencia de fotogramas (FPS Drift)
+    fps_val = random.choice(["29.97", "30.03", "29.98", "30.02"])
     common = [
         FFMPEG, "-y", "-ss", f"{trim_start:.2f}", "-t", f"{dur:.2f}",
         "-i", src,
@@ -379,7 +405,7 @@ def render(src, dur, hook, cta, out_path, zoom_w=1090, zoom_h=1939, cta_color="y
         "-map", "[v]", "-map", "[a]",
         "-map_metadata", "-1",
         "-metadata", "title=", "-metadata", "comment=", "-metadata", "encoder=",
-        "-pix_fmt", "yuv420p", "-r", "30",
+        "-pix_fmt", "yuv420p", "-r", fps_val,
         "-c:a", "aac", "-b:a", "192k", "-ar", "44100",
         "-movflags", "+faststart",
         out_path,
