@@ -363,8 +363,11 @@ def revisar_bandeja_telegram(historial):
 #   TAPADO INTELIGENTE DE MARCA DE AGUA (MEJORA 6)
 # ============================================================
 
-def crear_placa_dorada(texto=BADGE_TEXT):
-    """Crea la placa dorada elegante (@frutnovelas776) igual a procesar_videos_auto.py."""
+def crear_placa_dorada(texto=None):
+    """Crea una placa estética y personalizada con el nombre de la cuenta para tapar marcas ajenas."""
+    texto = (texto or BADGE_TEXT).strip()
+    if not texto.startswith("@"):
+        texto = f"@{texto}"
     w, h = 360, 56
     badge = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     draw = ImageDraw.Draw(badge)
@@ -382,7 +385,7 @@ def crear_placa_dorada(texto=BADGE_TEXT):
     ty = (h - th) // 2 - 2
     draw.text((tx, ty), texto, font=font, fill=(255, 230, 100, 255))
 
-    temp_badge = os.path.join(tempfile.gettempdir(), "badge_marca_dorada.png")
+    temp_badge = os.path.join(tempfile.gettempdir(), f"badge_{re.sub(r'[^a-zA-Z0-9]', '', texto)}.png")
     badge.save(temp_badge)
     return temp_badge
 
@@ -436,16 +439,17 @@ def detectar_posicion_marca(video_path, modo_marca="auto"):
     return None
 
 
-def aplicar_placa_marca(video_path, modo_marca="auto"):
-    """Si detecta marca de agua (o si el usuario pidió 'arriba'/'abajo'), estampa la placa @frutnovelas776."""
+def aplicar_placa_marca(video_path, modo_marca="auto", badge_text=None):
+    """Si detecta marca de agua (o si el modo es forzado), estampa la placa personalizada con la cuenta actual."""
     pos = detectar_posicion_marca(video_path, modo_marca)
     if not pos:
-        print("  Marca de agua: No se detectó marca externa (o modo 'no'). Video limpio.")
+        print("  Marca de agua: No se detectó marca externa. Video limpio.")
         return True
 
+    nombre_badge = (badge_text or BADGE_TEXT).strip()
     x, y, desc_pos = pos
-    print(f"  Tapando marca de agua en posición {desc_pos} (X={x}, Y={y}) con placa {BADGE_TEXT}...")
-    badge_png = crear_placa_dorada(BADGE_TEXT)
+    print(f"  Tapando marca de agua en posición {desc_pos} (X={x}, Y={y}) con placa propia {nombre_badge}...")
+    badge_png = crear_placa_dorada(nombre_badge)
     tmp_out = video_path + ".wm.mp4"
 
     cmd = [
@@ -462,7 +466,11 @@ def aplicar_placa_marca(video_path, modo_marca="auto"):
     rc, _ = AUTO_REEL.run_ff(cmd)
     if rc == 0 and os.path.exists(tmp_out) and os.path.getsize(tmp_out) > 10000:
         os.replace(tmp_out, video_path)
-        print("  Placa dorada aplicada con éxito.")
+        print(f"  Placa dorada {nombre_badge} aplicada con éxito.")
+        try:
+            os.remove(badge_png)
+        except Exception:
+            pass
         return True
     return False
 
@@ -1137,11 +1145,10 @@ def formatear_hook_dos_lineas(texto_limpio):
     return f"{' '.join(palabras[:mejor_corte])}|{' '.join(palabras[mejor_corte:])}"
 
 
-def analizar_descripcion_tiktok(raw_desc, series_counts, custom_hook="", hashtags_cuenta=None, semilla=""):
-    from hook_utils import generar_hook_inteligente, limpiar_texto_descripcion
+def analizar_descripcion_tiktok(raw_desc, series_counts, custom_hook="", hashtags_cuenta=None, semilla="", cuenta_id=""):
+    from hook_utils import generar_hook_inteligente, limpiar_texto_descripcion, generar_copy_reel_con_gemini
 
     hashtags_base = hashtags_cuenta if hashtags_cuenta else DEFAULT_HASHTAGS
-    hashtags = re.findall(r"#\w+", raw_desc)
     texto_limpio = limpiar_texto_descripcion(raw_desc)
 
     # Seguridad: si el custom_hook viene con la etiqueta de interfaz, descartarlo para leer el título real
@@ -1170,18 +1177,13 @@ def analizar_descripcion_tiktok(raw_desc, series_counts, custom_hook="", hashtag
     else:
         parte_num = 1
 
-    if not hashtags:
-        hashtags_finales = list(hashtags_base)
-    else:
-        hashtags_finales = []
-        for h in hashtags + list(hashtags_base):
-            if h.lower() not in [x.lower() for x in hashtags_finales]:
-                hashtags_finales.append(h)
-            if len(hashtags_finales) >= 5:
-                break
-
-    titulo_ig = custom_hook.replace("|", " ").strip() if custom_hook else (texto_limpio if texto_limpio else "La historia completa")
-    caption_ig = f"{titulo_ig} {' '.join(hashtags_finales[:5])}".strip()
+    # Generación de Copy SEO con Gemini IA y combinación de hashtags inteligentes
+    caption_ig = generar_copy_reel_con_gemini(
+        raw_desc,
+        hook=hook_txt,
+        cuenta_id=cuenta_id,
+        hashtags_base=hashtags_base
+    )
     serie_archivo = re.sub(r'[<>:"/\\|?*]', "", serie_base)[:40].strip() or "HISTORIA"
 
     return {
@@ -1620,7 +1622,7 @@ def main():
         return reporte_diario.main()
     url_manual = os.environ.get("MANUAL_URL", "").strip()
     hook_manual = os.environ.get("MANUAL_HOOK", "").strip()
-    modo_marca = os.environ.get("WATERMARK_POS", "no").strip() or "no"
+    modo_marca = os.environ.get("WATERMARK_POS", "auto").strip() or "auto"
     cuenta_objetivo = os.environ.get("TARGET_ACCOUNT", "frutnovelas776").strip().lower() or "frutnovelas776"
     # Compatibilidad con alias antiguos
     if cuenta_objetivo == "cuenta1":
@@ -1784,6 +1786,7 @@ def main():
         custom_hook=hook_manual,
         hashtags_cuenta=cfg_seleccionada.get("hashtags_default"),
         semilla=vid_id,
+        cuenta_id=cuenta_objetivo,
     )
     print("-" * 65)
     print(f"  ID TikTok  : {vid_id}")
@@ -1894,7 +1897,8 @@ def main():
             print(f"  [{cid}] ERROR durante el renderizado con FFmpeg.")
             continue
 
-        aplicar_placa_marca(out_path, modo_marca=modo_marca)
+        badge_cuenta = cfg_c.get("nombre") or cid
+        aplicar_placa_marca(out_path, modo_marca=modo_marca, badge_text=badge_cuenta)
         AUTO_REEL.limpiar_metadatos(out_path)
         # Portada con la identidad visual rotativa coordinada con el video
         cover_jpg = generar_portada_reel(
