@@ -2,6 +2,7 @@
   "account_url": "https://www.tiktok.com/@helloword.visuals",
   "channel_id": "MS4wLjABAAAACLle2hko75dXsCGmRLFp0i-pA-FOH-Ds8uJ7Nr7ETr6Mt22MsXZYMKxKmRjH3R7K",
   "processed_ids": [
+    "7596570325245103382",
     "7694949820842183958",
     "7600281727168204054",
     "7599365311061691671",
@@ -107,9 +108,21 @@
     "los vegetales se quejan 3d": 1,
     "objetos gamer que hablan": 1,
     "siempre de quejándose": 1,
-    "le robó su piel para salir": 1
+    "le robó su piel para salir": 1,
+    "conoce las frutas": 1
   },
   "history": [
+    {
+      "id": "7596570325245103382",
+      "date": "2026-11-17 22:04:08",
+      "title": "Conoce las frutas 🍐🍇🍓🍎🍌🍊🍍#parati",
+      "hook": "CONOCE LAS FRUTAS",
+      "caption_ig": "🎬 CONOCE LAS FRUTAS.\n\nLas cosas no siempre son lo que parecen... ¿Qué habrías hecho tú en esta situación? Te leo abajo 👇👀\n\n#aventuras #reels #viral #parati",
+      "accounts": [
+        "cuenta_1"
+      ],
+      "ig_link": "• @aventuras56_6: https://www.instagram.com/reel/Df29QDxssn0/"
+    },
     {
       "id": "7694949820842183958",
       "date": "2026-11-17 19:32:12",
@@ -817,7 +830,7 @@
     "frutnovelas777": 1794698751.277388,
     "novel_asanimadas": 1794669599.2287304,
     "novelas_frutosass": 1794703815.651194,
-    "cuenta_1": 1794943864.2799184
+    "cuenta_1": 1794953033.898393
   },
   "account_first_seen": {
     "frutnovelas776": 1794571550.604157,
@@ -827,6 +840,16 @@
     "cuenta_1": 1794789567.0865886
   },
   "huellas_videos": [
+    {
+      "id": "7596570325245103382",
+      "h": [
+        2247702903494156657,
+        9857398838297268069,
+        2821279912179085643
+      ],
+      "ts": 1794953048,
+      "date": "2026-11-17 22:04"
+    },
     {
       "id": "7694949820842183958",
       "h": [
@@ -1070,6 +1093,6 @@
   ],
   "pausa_cuentas": {},
   "account_style_rot": {
-    "cuenta_1": 1
+    "cuenta_1": 2
   }
 }
