@@ -262,13 +262,13 @@ def build_filters(dur, hook, cta, zoom_w=1090, zoom_h=1939, cta_color="yellow", 
         speed_factor = round(random.uniform(1.03, 1.06), 3)
 
     # Mejora 4: Rotación dinámica de colores de CTA y fuentes de alto impacto
-    PALETA_VIRAL = ["#FFE600", "#00F0FF", "#39FF14", "#FFFFFF", "#FF5252"]
-    FUENTES_VIRALES = ["arialbd.ttf", "impact.ttf", "segoeuib.ttf", "trebucbd.ttf"]
+    PALETA_VIRAL = ["#FFE600", "#00F0FF", "#39FF14", "#FF5252", "#D946EF"]
+    FUENTES_VIRALES = ["impact.ttf", "trebucbd.ttf", "arialbd.ttf", "segoeuib.ttf"]
 
-    if cta_color in ("yellow", "#FFE600", None, ""):
+    if not cta_color or cta_color in ("yellow", "gold"):
         cta_color = random.choice(PALETA_VIRAL)
 
-    if font_file in ("arialbd.ttf", None, ""):
+    if not font_file:
         font_file = random.choice(FUENTES_VIRALES)
 
     font_p = get_font_file(font_file)
@@ -285,9 +285,11 @@ def build_filters(dur, hook, cta, zoom_w=1090, zoom_h=1939, cta_color="yellow", 
     hook_filt = ""
     for i, line in enumerate(hook_lines):
         lt = line.replace("\\", "\\\\").replace("'", "\\'").replace(":", "\\:").replace("%", "\\%")
+        # Línea 1 en blanco puro; Línea 2 y siguientes en color de acento de alto impacto
+        color_linea = "white" if i == 0 else cta_color
         hook_filt += (
             f"drawtext=fontfile='{font_p}':text='{lt}'"
-            f":fontsize={hook_fs}:fontcolor=white:borderw=6:bordercolor=black"
+            f":fontsize={hook_fs}:fontcolor={color_linea}:borderw=6:bordercolor=black"
             f":x=(w-text_w)/2:y={140 + i * (hook_fs + 16)}"
             f":enable='between(t,0,2.5)',"
         )
@@ -314,9 +316,11 @@ def build_filters(dur, hook, cta, zoom_w=1090, zoom_h=1939, cta_color="yellow", 
     cta_filt = ""
     for i, line in enumerate(cta_lines):
         ct = line.replace("\\", "\\\\").replace("'", "\\'").replace(":", "\\:").replace("%", "\\%")
+        # Línea 1 blanca si son 2 líneas; Línea 2 y siguientes en cta_color (o todo en cta_color si es 1 línea)
+        color_cta = "white" if (i == 0 and len(cta_lines) > 1) else cta_color
         cta_filt += (
             f"drawtext=fontfile='{font_p}':text='{ct}'"
-            f":fontsize={cta_fs}:fontcolor={cta_color}:borderw=6:bordercolor=black"
+            f":fontsize={cta_fs}:fontcolor={color_cta}:borderw=6:bordercolor=black"
             f":x=(w-text_w)/2:y=h-400+{i * (cta_fs + 14)}"
             f":enable='between(t,{t_cta:.2f},{dur:.2f})',"
         )
