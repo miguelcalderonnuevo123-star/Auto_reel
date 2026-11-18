@@ -2,6 +2,7 @@
   "account_url": "https://www.tiktok.com/@helloword.visuals",
   "channel_id": "MS4wLjABAAAACLle2hko75dXsCGmRLFp0i-pA-FOH-Ds8uJ7Nr7ETr6Mt22MsXZYMKxKmRjH3R7K",
   "processed_ids": [
+    "7596724827336019222",
     "7596570325245103382",
     "7694949820842183958",
     "7600281727168204054",
@@ -109,9 +110,21 @@
     "objetos gamer que hablan": 1,
     "siempre de quejándose": 1,
     "le robó su piel para salir": 1,
-    "conoce las frutas": 1
+    "conoce las frutas": 1,
+    "verduras animadas zanahoria brócoli tomate maíz": 1
   },
   "history": [
+    {
+      "id": "7596724827336019222",
+      "date": "2026-11-18 01:03:12",
+      "title": "Verduras animadas 🥕 Zanahoria 🥦 Brócoli 🍅 Tomate 🌽 Maíz 🥬 Lechuga 🧅 Cebolla 🥔 Papa 🫑 Pimiento",
+      "hook": "VERDURAS ANIMADAS ZANAHORIA|BRÓCOLI TOMATE MAÍZ",
+      "caption_ig": "🎬 VERDURAS ANIMADAS ZANAHORIA BRÓCOLI TOMATE MAÍZ.\n\nLas cosas no siempre son lo que parecen... ¿Qué habrías hecho tú en esta situación? Te leo abajo 👇👀\n\n#aventuras #reels #viral",
+      "accounts": [
+        "cuenta_1"
+      ],
+      "ig_link": "• @aventuras56_6: https://www.instagram.com/reel/Df3Rk3aMtm7/"
+    },
     {
       "id": "7596570325245103382",
       "date": "2026-11-17 22:04:08",
@@ -830,7 +843,7 @@
     "frutnovelas777": 1794698751.277388,
     "novel_asanimadas": 1794669599.2287304,
     "novelas_frutosass": 1794703815.651194,
-    "cuenta_1": 1794953033.898393
+    "cuenta_1": 1794963670.195049
   },
   "account_first_seen": {
     "frutnovelas776": 1794571550.604157,
@@ -840,6 +853,16 @@
     "cuenta_1": 1794789567.0865886
   },
   "huellas_videos": [
+    {
+      "id": "7596724827336019222",
+      "h": [
+        8174448268043065193,
+        144661433023928099,
+        4259683308249974327
+      ],
+      "ts": 1794963792,
+      "date": "2026-11-18 01:03"
+    },
     {
       "id": "7596570325245103382",
       "h": [
@@ -1095,6 +1118,6 @@
     "cuenta_1": 1795048548.3801892
   },
   "account_style_rot": {
-    "cuenta_1": 4
+    "cuenta_1": 5
   }
 }
