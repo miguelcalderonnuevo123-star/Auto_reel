@@ -1091,8 +1091,10 @@
       "date": "2026-11-13 12:05"
     }
   ],
-  "pausa_cuentas": {},
+  "pausa_cuentas": {
+    "cuenta_1": 1795048337.4112744
+  },
   "account_style_rot": {
-    "cuenta_1": 2
+    "cuenta_1": 3
   }
 }
