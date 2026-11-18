@@ -2,6 +2,7 @@
   "account_url": "https://www.tiktok.com/@helloword.visuals",
   "channel_id": "MS4wLjABAAAACLle2hko75dXsCGmRLFp0i-pA-FOH-Ds8uJ7Nr7ETr6Mt22MsXZYMKxKmRjH3R7K",
   "processed_ids": [
+    "7707356576339856662",
     "7596724827336019222",
     "7596570325245103382",
     "7694949820842183958",
@@ -111,9 +112,21 @@
     "siempre de quejándose": 1,
     "le robó su piel para salir": 1,
     "conoce las frutas": 1,
-    "verduras animadas zanahoria brócoli tomate maíz": 1
+    "verduras animadas zanahoria brócoli tomate maíz": 1,
+    "cargó 100 libras en cada mano": 1
   },
   "history": [
+    {
+      "id": "7707356576339856662",
+      "date": "2026-11-18 02:22:11",
+      "title": "CARGÓ 100 LIBRAS EN CADA MANO DURANTE 10 AÑOS 😱🍒 | PARTE 1 #Boxeo #HistoriasVirales #Animacion3D #Frutinovela #Parte1",
+      "hook": "CARGÓ 100 LIBRAS|EN CADA MANO",
+      "caption_ig": "🎬 CARGÓ 100 LIBRAS EN CADA MANO.\n\nLas cosas no siempre son lo que parecen... ¿Qué habrías hecho tú en esta situación? Te leo abajo 👇👀\n\n#aventuras #reels #viral #Boxeo #HistoriasVirales",
+      "accounts": [
+        "cuenta_1"
+      ],
+      "ig_link": "• @aventuras56_6: https://www.instagram.com/reel/Df3aqyBMEQ9/"
+    },
     {
       "id": "7596724827336019222",
       "date": "2026-11-18 01:03:12",
@@ -843,7 +856,7 @@
     "frutnovelas777": 1794698751.277388,
     "novel_asanimadas": 1794669599.2287304,
     "novelas_frutosass": 1794703815.651194,
-    "cuenta_1": 1794963670.195049
+    "cuenta_1": 1794968480.9111207
   },
   "account_first_seen": {
     "frutnovelas776": 1794571550.604157,
@@ -853,6 +866,16 @@
     "cuenta_1": 1794789567.0865886
   },
   "huellas_videos": [
+    {
+      "id": "7707356576339856662",
+      "h": [
+        1773102376468276754,
+        14788583590427330276,
+        16806415942688692959
+      ],
+      "ts": 1794968531,
+      "date": "2026-11-18 02:22"
+    },
     {
       "id": "7596724827336019222",
       "h": [
@@ -1118,6 +1141,6 @@
     "cuenta_1": 1795048548.3801892
   },
   "account_style_rot": {
-    "cuenta_1": 5
+    "cuenta_1": 6
   }
 }
