@@ -202,18 +202,20 @@ def enviar_video_telegram(chat_id, video_path, caption="", botones=None):
     video_final = video_path
     video_comprimido_temp = None
 
-    if tam_mb > 48.0:
-        print(f"  ⚠️ Video de {tam_mb:.1f} MB supera los 48 MB permitidos por Telegram. Comprimiendo para envío...")
+    if tam_mb > 45.0:
+        print(f"  ⚠️ Video de {tam_mb:.1f} MB supera el límite seguro de Telegram (45 MB). Comprimiendo...")
         video_comprimido_temp = video_path + ".tg_opt.mp4"
+        dur_v = AUTO_REEL.get_duration(video_path) or 60.0
+        target_bitrate = max(500, min(2200, int((36 * 8 * 1024) / max(dur_v, 10)) - 96))
         cmd_c = [
             AUTO_REEL.FFMPEG, "-y", "-i", video_path,
-            "-c:v", "libx264", "-preset", "veryfast", "-b:v", "2600k", "-maxrate", "3000k", "-bufsize", "6000k",
-            "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", video_comprimido_temp
+            "-c:v", "libx264", "-preset", "ultrafast", "-b:v", f"{target_bitrate}k", "-maxrate", f"{target_bitrate + 200}k", "-bufsize", "4000k",
+            "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart", video_comprimido_temp
         ]
         AUTO_REEL.run(cmd_c, timeout=90)
         if os.path.exists(video_comprimido_temp) and os.path.getsize(video_comprimido_temp) > 0:
             video_final = video_comprimido_temp
-            print(f"  ✅ Optimizado para Telegram: {os.path.getsize(video_final)/(1024*1024):.1f} MB")
+            print(f"  ✅ Optimizado para Telegram: {os.path.getsize(video_final)/(1024*1024):.1f} MB (bitrate: {target_bitrate}k)")
 
     url = f"https://api.telegram.org/bot{tok}/sendVideo"
     data = {
@@ -237,9 +239,15 @@ def enviar_video_telegram(chat_id, video_path, caption="", botones=None):
             return True
         else:
             print(f"  Aviso Telegram sendVideo (HTTP {r.status_code}): {r.text}")
+            # Respaldo garantizado por texto si el video no cupo en Telegram
+            if caption and chat_id:
+                print("  Enviando mensaje de respaldo por texto a Telegram...")
+                enviar_mensaje_telegram(chat_id, caption, botones=botones)
             return False
     except Exception as e:
         print(f"  Error enviando video a Telegram: {e}")
+        if caption and chat_id:
+            enviar_mensaje_telegram(chat_id, caption, botones=botones)
         return False
 
 
@@ -2007,7 +2015,16 @@ def main():
                         f"📝 <b>Copy:</b>\n{info['caption_ig']}\n\n"
                         f"📥 <i>Aquí tienes tu copia en HD guardada en Telegram.</i>"
                     )
-                    enviar_video_telegram(chat_id_tg, out_path, caption=caption_subido)
+                    ok_envio = enviar_video_telegram(chat_id_tg, out_path, caption=caption_subido)
+                    if not ok_envio and chat_id_tg:
+                        enviar_mensaje_telegram(
+                            chat_id_tg,
+                            f"🎉 <b>¡Reel publicado en {cfg_c.get('nombre', cid)}!</b>\n\n"
+                            f"📌 <b>Hook:</b> {info['hook']}\n"
+                            f"🔗 <b>Enlace IG:</b> {ig_link}\n\n"
+                            f"📝 <b>Copy:</b>\n{info['caption_ig']}\n\n"
+                            f"ℹ️ <i>(El archivo pesaba más de 50 MB para enviarlo como video en Telegram, pero ya está publicado y 100% visible en tu Instagram).</i>"
+                        )
             else:
                 if chat_id_tg:
                     caption_fallo = (
