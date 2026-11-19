@@ -117,7 +117,7 @@ def generar_hook_con_gemini(raw_desc, api_key=None):
     }
 
     # Modelos compatibles con la API de Google AI Studio en orden de velocidad y cuota
-    modelos = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash"]
+    modelos = ["gemini-3.5-flash-lite", "gemini-flash-latest"]
 
     for mod in modelos:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent?key={key}"
@@ -128,7 +128,7 @@ def generar_hook_con_gemini(raw_desc, api_key=None):
                 headers=headers,
                 method="POST"
             )
-            with urllib.request.urlopen(req, timeout=10) as resp:
+            with urllib.request.urlopen(req, timeout=6) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
                 parts = data["candidates"][0]["content"]["parts"]
                 text_parts = [p.get("text", "") for p in parts if not p.get("thought") and p.get("text")]
@@ -375,7 +375,7 @@ def generar_comentario_con_gemini(raw_desc, hook="", parte_num=1, tiene_partes=F
         "Content-Type": "application/json"
     }
 
-    modelos = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash"]
+    modelos = ["gemini-3.5-flash-lite", "gemini-flash-latest"]
 
     for mod in modelos:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent?key={key}"
@@ -386,7 +386,7 @@ def generar_comentario_con_gemini(raw_desc, hook="", parte_num=1, tiene_partes=F
                 headers=headers,
                 method="POST"
             )
-            with urllib.request.urlopen(req, timeout=10) as resp:
+            with urllib.request.urlopen(req, timeout=6) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
                 parts = data["candidates"][0]["content"]["parts"]
                 text_parts = [p.get("text", "") for p in parts if not p.get("thought") and p.get("text")]
@@ -471,12 +471,12 @@ def generar_copy_reel_con_gemini(raw_desc, hook="", cuenta_id="", hashtags_base=
             "generationConfig": {"temperature": 0.4, "maxOutputTokens": 600}
         }
         headers = {"Content-Type": "application/json"}
-        modelos = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash"]
+        modelos = ["gemini-3.5-flash-lite", "gemini-flash-latest"]
         for mod in modelos:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent?key={key}"
             try:
                 req = urllib.request.Request(url, data=json.dumps(body).encode("utf-8"), headers=headers, method="POST")
-                with urllib.request.urlopen(req, timeout=10) as resp:
+                with urllib.request.urlopen(req, timeout=6) as resp:
                     data = json.loads(resp.read().decode("utf-8"))
                     parts = data["candidates"][0]["content"]["parts"]
                     text_parts = [p.get("text", "") for p in parts if not p.get("thought") and p.get("text")]

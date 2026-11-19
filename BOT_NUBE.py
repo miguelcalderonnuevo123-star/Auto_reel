@@ -1583,6 +1583,29 @@ def subir_reel_instagram(video_path, caption, cover_path=None, historial=None, c
             link = f"https://www.instagram.com/reel/{code}/" if code else f"ID: {pk}"
             print(f"  [{cuenta_id}] SUBIDO CON ÉXITO A INSTAGRAM: {link}")
 
+            # [Mejora Velocidad] Enviar el video a Telegram EN PARALELO mientras se publica el comentario y la Historia
+            fut_tg_async = None
+            if chat_id_tg:
+                caption_subido_async = (
+                    f"🎉 <b>¡Reel publicado en {nombre_cuenta}!</b>\n\n"
+                    f"📌 <b>Hook:</b> {hook}\n"
+                    f"🔗 <b>Enlace IG:</b> {link}\n\n"
+                    f"📝 <b>Copy:</b>\n{caption}\n\n"
+                    f"📥 <i>Aquí tienes tu copia en HD guardada en Telegram.</i>"
+                )
+                def _entregar_tg_bg():
+                    ok_e = enviar_video_telegram(chat_id_tg, video_path, caption=caption_subido_async)
+                    if not ok_e:
+                        enviar_mensaje_telegram(
+                            chat_id_tg,
+                            f"🎉 <b>¡Reel publicado en {nombre_cuenta}!</b>\n\n"
+                            f"📌 <b>Hook:</b> {hook}\n"
+                            f"🔗 <b>Enlace IG:</b> {link}\n\n"
+                            f"📝 <b>Copy:</b>\n{caption}\n\n"
+                            f"ℹ️ <i>(Ya está publicado y 100% visible en tu Instagram).</i>"
+                        )
+                fut_tg_async = _IA_BG_POOL.submit(_entregar_tg_bg)
+
             # [Mejora 1, 2 y 4] Auto-Comentario Viral Dinámico + Fijar arriba (Pin Comment)
             comentario_cfg = (cfg_cuenta.get("auto_comment") or "").strip()
             if comentario_cfg.lower() not in ("no", "off", "none", "0") and pk and pk != "OK":
@@ -1684,6 +1707,12 @@ def subir_reel_instagram(video_path, caption, cover_path=None, historial=None, c
                     print(f"  [{cuenta_id}] ✅ Historia en video de 15s publicada con éxito (Story ID: {story_pk})")
                 except Exception as e_story:
                     print(f"  [{cuenta_id}] Aviso al compartir en Historia: {e_story}")
+
+            if fut_tg_async:
+                try:
+                    fut_tg_async.result(timeout=90)
+                except Exception:
+                    pass
 
             return link
         except Exception as e:
@@ -2172,24 +2201,6 @@ def main():
                 if cid not in first_seen:
                     first_seen[cid] = time.time()
                 links_publicados.append(f"• {cfg_c.get('nombre', cid)}: {ig_link}")
-                if chat_id_tg:
-                    caption_subido = (
-                        f"🎉 <b>¡Reel publicado en {cfg_c.get('nombre', cid)}!</b>\n\n"
-                        f"📌 <b>Hook:</b> {info['hook']}\n"
-                        f"🔗 <b>Enlace IG:</b> {ig_link}\n\n"
-                        f"📝 <b>Copy:</b>\n{info['caption_ig']}\n\n"
-                        f"📥 <i>Aquí tienes tu copia en HD guardada en Telegram.</i>"
-                    )
-                    ok_envio = enviar_video_telegram(chat_id_tg, out_path, caption=caption_subido)
-                    if not ok_envio and chat_id_tg:
-                        enviar_mensaje_telegram(
-                            chat_id_tg,
-                            f"🎉 <b>¡Reel publicado en {cfg_c.get('nombre', cid)}!</b>\n\n"
-                            f"📌 <b>Hook:</b> {info['hook']}\n"
-                            f"🔗 <b>Enlace IG:</b> {ig_link}\n\n"
-                            f"📝 <b>Copy:</b>\n{info['caption_ig']}\n\n"
-                            f"ℹ️ <i>(El archivo pesaba más de 50 MB para enviarlo como video en Telegram, pero ya está publicado y 100% visible en tu Instagram).</i>"
-                        )
             else:
                 if chat_id_tg:
                     caption_fallo = (
