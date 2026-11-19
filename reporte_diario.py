@@ -32,6 +32,14 @@ def _salud_cuenta(cid, cfg, historial):
         cl.login_by_sessionid(sid)
         return True, "sesión OK"
     except Exception as e:
+        import urllib.parse
+        sid_bk = urllib.parse.unquote(((historial or {}).get("ig_sessions") or {}).get(cid, "").strip())
+        if sid_bk and sid_bk != sid:
+            try:
+                cl.login_by_sessionid(sid_bk)
+                return True, "sesión OK (respaldo historial)"
+            except Exception as e2:
+                return False, f"sesión caída ({str(e2)[:70]})"
         return False, f"sesión caída ({str(e)[:70]})"
 
 

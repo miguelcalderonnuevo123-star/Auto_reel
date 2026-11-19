@@ -1494,7 +1494,19 @@ def subir_reel_instagram(video_path, caption, cover_path=None, historial=None, c
                     pass
         except Exception as e:
             error_login = str(e)
-            print(f"  [{cuenta_id}] Aviso: falló login_by_sessionid ({e}).")
+            print(f"  [{cuenta_id}] Aviso: falló login_by_sessionid principal ({e}).")
+            # Auto-respaldo: si en historial_bot.json hay una sesión distinta recién renovada, probarla antes de fallar
+            sid_backup = urllib.parse.unquote(((historial or {}).get("ig_sessions") or {}).get(cuenta_id, "").strip())
+            if sid_backup and sid_backup != sid:
+                try:
+                    print(f"  [{cuenta_id}] Probando sesión de respaldo guardada en historial_bot.json...")
+                    cl.login_by_sessionid(sid_backup)
+                    conectado = True
+                    sid = sid_backup
+                    print(f"  [{cuenta_id}] ✅ Sesión de respaldo conectada con éxito.")
+                except Exception as e_bk:
+                    error_login = str(e_bk)
+                    print(f"  [{cuenta_id}] Aviso: también falló sesión de respaldo ({e_bk}).")
 
     if not conectado and user and pwd:
         try:
