@@ -113,6 +113,16 @@ def cargar_historial():
 
 
 def guardar_historial(data):
+    if isinstance(data, dict):
+        if isinstance(data.get("processed_ids"), list):
+            data["processed_ids"] = data["processed_ids"][:500]
+        if isinstance(data.get("huellas_videos"), list):
+            data["huellas_videos"] = data["huellas_videos"][:300]
+        if isinstance(data.get("history"), list):
+            data["history"] = data["history"][:150]
+        if isinstance(data.get("series_counts"), dict) and len(data["series_counts"]) > 300:
+            items_sc = list(data["series_counts"].items())[-300:]
+            data["series_counts"] = dict(items_sc)
     with open(HISTORIAL_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 

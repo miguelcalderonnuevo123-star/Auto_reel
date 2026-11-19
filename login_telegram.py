@@ -36,6 +36,8 @@ SECRET_MAP = {
     "novelas_frutas_pro": "IG_SESSIONID_8",
     "frutidramas_top": "IG_SESSIONID_9",
     "reino_frutosas": "IG_SESSIONID_10",
+    "bibliareflexiones_a": "IG_SESSIONID_11",
+    "bibliareflexiones.a": "IG_SESSIONID_11",
 }
 
 NUMERO_A_CUENTA = {
@@ -48,12 +50,45 @@ NUMERO_A_CUENTA = {
     "7": "fruticuentos_oficial",
     "8": "novelas_frutas_pro",
     "9": "frutidramas_top",
-    "10": "reino_frutosas"
+    "10": "reino_frutosas",
+    "11": "bibliareflexiones_a",
 }
+
+ALIAS_A_CUENTA = {}
+
+def _cargar_mapeo_dinamico_granja():
+    """Lee cuentas_granja.json para soportar cualquier cuenta (ej: Miguel @aventuras56_6 o @bibliareflexiones.a) sin cableado fijo."""
+    if not os.path.exists(GRANJA_PATH):
+        return
+    try:
+        with open(GRANJA_PATH, "r", encoding="utf-8") as f:
+            cuentas = (json.load(f) or {}).get("cuentas") or {}
+        if not cuentas:
+            return
+        # Si el archivo tiene cuentas propias (como cuenta_1 en el repo de Miguel), mapear números y alias dinámicamente
+        for idx, (cid, cfg) in enumerate(cuentas.items(), 1):
+            cid_low = cid.strip().lower()
+            sec = (cfg.get("secret_sessionid") or "IG_SESSIONID").strip()
+            SECRET_MAP[cid_low] = sec
+            ALIAS_A_CUENTA[cid_low] = cid
+            nom = (cfg.get("nombre") or "").strip().lstrip("@").lower()
+            if nom:
+                SECRET_MAP[nom] = sec
+                ALIAS_A_CUENTA[nom] = cid
+            if "frutnovelas776" not in cuentas:
+                NUMERO_A_CUENTA[str(idx)] = cid
+            elif str(idx) not in NUMERO_A_CUENTA:
+                NUMERO_A_CUENTA[str(idx)] = cid
+    except Exception as e:
+        print(f"Aviso leyendo cuentas_granja.json en login_telegram: {e}")
+
+_cargar_mapeo_dinamico_granja()
 
 def normalizar_cuenta(acc_str):
     acc = acc_str.strip().lower().replace("@", "")
-    return NUMERO_A_CUENTA.get(acc, acc)
+    if acc in NUMERO_A_CUENTA:
+        return NUMERO_A_CUENTA[acc]
+    return ALIAS_A_CUENTA.get(acc, acc)
 
 def enviar_telegram(chat_id, texto):
     if not TELEGRAM_TOKEN or not chat_id:
@@ -298,8 +333,15 @@ def login_playwright(username, password, chat_id, account=""):
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
-        print("Playwright no disponible.")
-        return None
+        import subprocess
+        print("Instalando Playwright y Chromium bajo demanda para el fallback web...")
+        subprocess.run([sys.executable, "-m", "pip", "install", "--quiet", "playwright"], check=False)
+        subprocess.run([sys.executable, "-m", "playwright", "install", "chromium", "--with-deps"], check=False)
+        try:
+            from playwright.sync_api import sync_playwright
+        except ImportError:
+            print("Playwright no disponible.")
+            return None
 
     print(f"Iniciando navegador Playwright (Fallback Web) para @{username}...")
     try:

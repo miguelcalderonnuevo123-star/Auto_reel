@@ -79,6 +79,11 @@ def main():
         + f"\n\n📥 Videos en cola manual: {cola}"
         + f"\n🎬 Total publicados en 24 h: {sum(conteo.values())}"
     )
+    chat_id = historial.get("telegram_chat_id")
+    for cfg in granja.values():
+        chat_id = chat_id or cfg.get("owner_chat_id")
+    chat_id = chat_id or 8804356608
+
     if caidas:
         msg += (
             "\n\n🚨 <b>ALERTA DE SESIÓN:</b> Renueva estas cuentas antes de la próxima publicación:\n"
@@ -91,10 +96,7 @@ def main():
             + "\n\n👉 <i>Para reconectar de inmediato sin abrir la PC, usa el comando <code>/conectar</code> o presiona '🔑 Conectar Cuenta' en el menú.</i>"
         )
         BOT.enviar_mensaje_telegram(chat_id, msg_alerta)
-    chat_id = historial.get("telegram_chat_id")
-    for cfg in granja.values():
-        chat_id = chat_id or cfg.get("owner_chat_id")
-    chat_id = chat_id or 8804356608
+
     BOT.enviar_mensaje_telegram(chat_id, msg)
     print(msg)
     return 0

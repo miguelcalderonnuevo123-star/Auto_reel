@@ -116,7 +116,7 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           PAT_GITHUB: ${{ secrets.PAT_GITHUB }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          TARGET_ACCOUNT: ${{ github.event.inputs.target_account || github.event.client_payload.target_account || 'frutnovelas776' }}
+          TARGET_ACCOUNT: ${{ github.event.inputs.target_account || github.event.client_payload.target_account || 'cuenta_1' }}
           MANUAL_URL: ${{ github.event.inputs.video_url || github.event.client_payload.video_url }}
           MANUAL_HOOK: ${{ github.event.inputs.custom_hook || github.event.client_payload.custom_hook }}
           WATERMARK_POS: ${{ github.event.inputs.watermark_pos || github.event.client_payload.watermark_pos || 'no' }}
@@ -136,11 +136,7 @@ jobs:
             echo "🤖 PILOTO AUTOMATICO (Disparado por Cloudflare Smart Cron)..."
             python -u BOT_NUBE.py --auto-diario
           elif [ -n "${{ github.event.client_payload.login_account }}" ]; then
-            echo "🔐 MODO LOGIN DIRECTO DESDE TELEGRAM..."
-            if [ -n "${{ github.event.client_payload.login_password }}" ]; then
-              pip install playwright
-              python -m playwright install chromium --with-deps
-            fi
+            echo "🔐 MODO LOGIN DIRECTO DESDE TELEGRAM (Turbo Móvil + Fallback Web bajo demanda)..."
             python -u login_telegram.py \
               --account "${{ github.event.client_payload.login_account }}" \
               --username "${{ github.event.client_payload.login_username }}" \
