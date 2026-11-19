@@ -1695,6 +1695,7 @@ def main():
     elif cuenta_objetivo == "cuenta2":
         cuenta_objetivo = "novelas_frutosass"
 
+    cuenta_cli_explicita = False
     for i, arg in enumerate(sys.argv):
         if arg == "--url" and i + 1 < len(sys.argv):
             url_manual = sys.argv[i + 1].strip()
@@ -1704,6 +1705,7 @@ def main():
             modo_marca = sys.argv[i + 1].strip()
         elif arg == "--cuenta" and i + 1 < len(sys.argv):
             cuenta_objetivo = sys.argv[i + 1].strip().lower()
+            cuenta_cli_explicita = True
         elif arg == "--chat-id" and i + 1 < len(sys.argv):
             try:
                 chat_id_cli = int(sys.argv[i + 1].strip())
@@ -1711,6 +1713,17 @@ def main():
                 chat_id_cli = None
     if "chat_id_cli" not in locals():
         chat_id_cli = None
+
+    if auto_diario and not cuenta_cli_explicita and not url_manual:
+        try:
+            import planificador
+            cid_plan, motivo_plan = planificador.elegir_cuenta(marcar_intento=True)
+            print(f"  [Planificador Inteligente] {motivo_plan}")
+            if not cid_plan:
+                return 0
+            cuenta_objetivo = cid_plan
+        except Exception as e_plan:
+            print(f"  Aviso consultando planificador: {e_plan}")
 
     print("=" * 65)
     print(f"  GRANJA TIKTOK -> AUTO_REEL -> INSTAGRAM ({datetime.now().strftime('%Y-%m-%d %H:%M:%S')})")
@@ -1896,8 +1909,8 @@ def main():
                 enviar_mensaje_telegram(chat_id_tg, msg_err)
             return 1
 
-    # Paso A: Descargar con AUTO_REEL
-    slug = AUTO_REEL.slug_from_url(url)
+    # Paso A: Descargar con AUTO_REEL (usando vid_id para cachear links cortos vt.tiktok.com)
+    slug = AUTO_REEL.slug_from_url(url, vid_id=vid_id)
     src = AUTO_REEL.download(url, slug)
     if not src:
         msg_e = f"❌ No se pudo descargar el video de TikTok ({url}). Verifica que el link sea válido."

@@ -94,12 +94,21 @@ def run(cmd, timeout=None):
     return p.returncode, (p.stdout or "") + (p.stderr or "")
 
 
-def run_ff(cmd):
-    """ffmpeg con salida a archivo temporal (evita bloqueos por pipe lleno)."""
+def run_ff(cmd, timeout=180):
+    """ffmpeg con salida a archivo temporal (evita bloqueos por pipe lleno) y timeout de seguridad."""
     tmp = tempfile.NamedTemporaryFile(mode="w+", suffix=".txt", delete=False,
                                       encoding="utf-8", errors="replace")
     p = subprocess.Popen(cmd, stdout=tmp, stderr=subprocess.STDOUT)
+    t0 = time.time()
+    timed_out = False
     while p.poll() is None:
+        if timeout and (time.time() - t0) > timeout:
+            timed_out = True
+            try:
+                p.kill()
+            except Exception:
+                pass
+            break
         time.sleep(1)
         print(".", end="", flush=True)
     print("", flush=True)
@@ -110,13 +119,27 @@ def run_ff(cmd):
             out = fh.read()
     except Exception:
         pass
-    os.remove(tmp.name)
+    try:
+        os.remove(tmp.name)
+    except Exception:
+        pass
+    if timed_out:
+        return 124, out + "\n[ERROR] FFmpeg superó el tiempo límite de seguridad (180s)."
     return p.returncode, out
 
 
-def slug_from_url(url):
-    m = re.search(r"/video/(\d+)", url)
-    return "tt_" + (m.group(1) if m else str(int(time.time())))
+def slug_from_url(url, vid_id=None):
+    if vid_id and str(vid_id).strip():
+        clean_id = re.sub(r"[^A-Za-z0-9_-]", "", str(vid_id).strip())
+        if clean_id:
+            return "tt_" + clean_id
+    m = re.search(r"/video/(\d+)", url or "")
+    if m:
+        return "tt_" + m.group(1)
+    m_short = re.search(r"tiktok\.com/(?:t/)?([A-Za-z0-9_-]{6,})", url or "")
+    if m_short:
+        return "tt_" + m_short.group(1)
+    return "tt_" + str(int(time.time()))
 
 
 def descargar_respaldo_tikwm(url, dest):
