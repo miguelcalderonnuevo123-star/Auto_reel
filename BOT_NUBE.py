@@ -523,24 +523,21 @@ def aplicar_placa_marca(video_path, modo_marca="auto", badge_text=None):
 
 def cazar_mejor_fotograma(video_path, dur, min_t=1.0):
     """
-    FRAME HUNTER: Escanea múltiples fotogramas candidatos entre min_t y min(7.0s, dur*0.8)
-    y selecciona el fotograma con mayor nitidez, expresividad y riqueza de color,
-    descartando fundidos a negro, tomas borrosas o pantallas vacías.
+    FRAME HUNTER PARALELO: Escanea 4 fotogramas candidatos simultáneamente en paralelo
+    usando los múltiples núcleos de CPU y selecciona el de mayor nitidez y riqueza de color.
     """
+    import concurrent.futures
     from PIL import ImageFilter, ImageStat
 
-    # Generar candidatos clave bien distribuidos (velocidad turbo)
     t_min = max(min_t, min(2.0, dur * 0.10))
     t_max = min(max(4.0, dur * 0.60), max(t_min + 1.0, dur - 4.0))
     paso = (t_max - t_min) / 3.0 if t_max > t_min else 0.5
     candidatos = [round(t_min + i * paso, 2) for i in range(4)]
 
-    mejor_t = 3.5
-    mejor_puntaje = -1.0
-
-    for t in candidatos:
+    def _evaluar_frame(t):
         tmp_frame = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
         tmp_frame.close()
+        puntaje = -1.0
         try:
             cmd = [
                 AUTO_REEL.FFMPEG, "-y",
@@ -555,27 +552,16 @@ def cazar_mejor_fotograma(video_path, dur, min_t=1.0):
             if os.path.exists(tmp_frame.name) and os.path.getsize(tmp_frame.name) > 1000:
                 with Image.open(tmp_frame.name) as im:
                     stat = ImageStat.Stat(im)
-                    # Brillo promedio
                     brillo = sum(stat.mean) / 3.0
-                    # Penalizar extremos (muy oscuro < 35 o muy quemado > 230)
                     if brillo < 35 or brillo > 230:
                         factor_brillo = 0.15
                     else:
                         factor_brillo = 1.0 - (abs(brillo - 128) / 128.0) * 0.35
-
-                    # Riqueza de color y contraste
                     color_score = sum(stat.stddev) / 3.0
-
-                    # Nitidez de bordes (caras, ojos, expresiones faciales)
                     edges = im.filter(ImageFilter.FIND_EDGES)
                     edge_stat = ImageStat.Stat(edges)
                     edge_score = sum(edge_stat.mean) / 3.0
-
                     puntaje = (color_score * 1.5 + edge_score * 2.5) * factor_brillo
-
-                    if puntaje > mejor_puntaje:
-                        mejor_puntaje = puntaje
-                        mejor_t = t
         except Exception:
             pass
         finally:
@@ -584,8 +570,17 @@ def cazar_mejor_fotograma(video_path, dur, min_t=1.0):
                     os.remove(tmp_frame.name)
                 except Exception:
                     pass
+        return (puntaje, t)
 
-    print(f"  🎯 Frame Hunter seleccionó el fotograma más expresivo en t={mejor_t:.2f}s (puntaje: {mejor_puntaje:.1f})")
+    mejor_t = 3.5
+    mejor_puntaje = -1.0
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+        for puntaje, t in pool.map(_evaluar_frame, candidatos):
+            if puntaje > mejor_puntaje:
+                mejor_puntaje = puntaje
+                mejor_t = t
+
+    print(f"  🎯 Frame Hunter Paralelo seleccionó t={mejor_t:.2f}s (puntaje: {mejor_puntaje:.1f})")
     return mejor_t
 
 
@@ -1223,8 +1218,13 @@ def formatear_hook_dos_lineas(texto_limpio):
     return f"{' '.join(palabras[:mejor_corte])}|{' '.join(palabras[mejor_corte:])}"
 
 
+import concurrent.futures
+_IA_BG_POOL = concurrent.futures.ThreadPoolExecutor(max_workers=3)
+_IA_PRECALC_COMMENT = {}
+
+
 def analizar_descripcion_tiktok(raw_desc, series_counts, custom_hook="", hashtags_cuenta=None, semilla="", cuenta_id=""):
-    from hook_utils import generar_hook_inteligente, limpiar_texto_descripcion, generar_copy_reel_con_gemini
+    from hook_utils import generar_hook_inteligente, limpiar_texto_descripcion, generar_copy_reel_con_gemini, generar_comentario_con_gemini
 
     hashtags_base = hashtags_cuenta if hashtags_cuenta else DEFAULT_HASHTAGS
     texto_limpio = limpiar_texto_descripcion(raw_desc)
@@ -1255,12 +1255,21 @@ def analizar_descripcion_tiktok(raw_desc, series_counts, custom_hook="", hashtag
     else:
         parte_num = 1
 
-    # Generación de Copy SEO con Gemini IA y combinación de hashtags inteligentes
-    caption_ig = generar_copy_reel_con_gemini(
+    # Lanzar generación de Copy SEO y Auto-Comentario con Gemini IA en segundo plano (0s de espera mientras descarga y renderiza)
+    future_copy = _IA_BG_POOL.submit(
+        generar_copy_reel_con_gemini,
         raw_desc,
         hook=hook_txt,
         cuenta_id=cuenta_id,
-        hashtags_base=hashtags_base
+        hashtags_base=hashtags_base,
+    )
+    _IA_PRECALC_COMMENT[cuenta_id or "default"] = _IA_BG_POOL.submit(
+        generar_comentario_con_gemini,
+        raw_desc,
+        hook=hook_txt,
+        parte_num=parte_num,
+        tiene_partes=tiene_partes,
+        cuenta_id=cuenta_id,
     )
     serie_archivo = re.sub(r'[<>:"/\\|?*]', "", serie_base)[:40].strip() or "HISTORIA"
 
@@ -1270,7 +1279,8 @@ def analizar_descripcion_tiktok(raw_desc, series_counts, custom_hook="", hashtag
         "parte": parte_num,
         "tiene_partes": tiene_partes,
         "hook": hook_txt,
-        "caption_ig": caption_ig,
+        "caption_ig": f"🎬 {hook_txt.replace('|', ' ').capitalize()}.\n\n{' '.join(hashtags_base[:4])}",
+        "caption_future": future_copy,
     }
 
 
@@ -1321,9 +1331,10 @@ def generar_comentario_viral(parte_num=1, custom_comment="", tiene_partes=False,
     import random
     from hook_utils import generar_comentario_con_gemini, limpiar_texto_descripcion
 
-    # 1) Intentar generar con Google Gemini IA contextual adaptado al nicho
+    # 1) Intentar obtener de la tarea en segundo plano ya pre-calculada o generar con Google Gemini IA
     try:
-        gemini_comentario = generar_comentario_con_gemini(raw_desc, hook=hook, parte_num=parte_num, tiene_partes=tiene_partes, cuenta_id=cuenta_id)
+        fut_pre = _IA_PRECALC_COMMENT.pop(cuenta_id or "default", None) or _IA_PRECALC_COMMENT.pop("default", None)
+        gemini_comentario = fut_pre.result(timeout=8) if fut_pre else generar_comentario_con_gemini(raw_desc, hook=hook, parte_num=parte_num, tiene_partes=tiene_partes, cuenta_id=cuenta_id)
         if gemini_comentario and len(gemini_comentario) >= 15:
             print(f"  🤖 Auto-comentario generado con Gemini IA ({cuenta_id}): {gemini_comentario}")
             return gemini_comentario
@@ -2126,6 +2137,15 @@ def main():
                 if chat_id_tg:
                     enviar_mensaje_telegram(chat_id_tg, alerta_limite)
                 continue
+
+            if info.get("caption_future"):
+                try:
+                    res_cap = info["caption_future"].result(timeout=10)
+                    if res_cap:
+                        info["caption_ig"] = res_cap
+                except Exception:
+                    pass
+                info["caption_future"] = None
 
             ig_link = subir_reel_instagram(
                 out_path, info["caption_ig"], cover_path=cover_jpg,
