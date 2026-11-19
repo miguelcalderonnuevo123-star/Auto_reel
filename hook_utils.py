@@ -22,7 +22,19 @@ HASHTAGS_GENERICOS = {
     "storytime", "story", "novela", "novelas", "reels", "reel", "explore", "explorar",
     "humor", "comedia", "drama", "funny", "meme", "memes", "edit", "video", "videos",
     "frutiverso", "frutiverso3d", "aiart", "aivideo", "iavideo", "cartoon", "dibujos",
-    "minidrama", "leccion", "lección", "shorts", "paratiiiiiiiiiii"
+    "minidrama", "leccion", "lección", "shorts", "paratiiiiiiiiiii", "animacion3d", "historiasdefrutas",
+    "cuentos3d", "historias3d", "animaciones", "videoviral", "reelviral", "viralreels",
+    "cuentos", "cuento", "fabula", "fabulas", "audiolibro", "audio", "music", "song"
+}
+
+PALABRAS_CLAVE_GENERICAS = {
+    "animacion", "animada", "animado", "animation", "animated", "3d", "ia", "ai",
+    "historia", "historias", "story", "storytime", "novela", "novelas", "fruti", "fruta", "frutas",
+    "tiktok", "tiktoker", "parati", "fyp", "foryou", "viral", "trend", "trending", "tendencia",
+    "capcut", "edit", "video", "videos", "short", "shorts", "reel", "reels", "explore",
+    "humor", "comedia", "drama", "funny", "meme", "memes", "dibujo", "dibujos", "cartoon",
+    "cuento", "cuentos", "fabula", "fabulas", "leccion", "minidrama", "xyzbca", "capibara",
+    "paratii", "foryoupage"
 }
 
 PALABRAS_COLGANTES = {
@@ -33,10 +45,10 @@ PALABRAS_COLGANTES = {
 }
 
 PLANTILLAS_CON_TEMA = [
-    "{X}|NADIE ESPERABA ESTE FINAL",
-    "LA HISTORIA DE|{X}",
-    "{X}|ESTO SE PUSO SERIO",
-    "LO QUE LE PASÓ A|{X}",
+    "{X}|EL FINAL TE SORPRENDERÁ",
+    "LA VERDAD SOBRE|{X}",
+    "{X}|NADIE ESPERABA ESTO",
+    "EL CASO DE|{X}",
     "{X}|MIRA HASTA EL FINAL",
 ]
 
@@ -48,7 +60,15 @@ PLANTILLAS_GENERICAS = [
     "EL FINAL TE VA|A SORPRENDER",
     "¿QUÉ HARÍAS TÚ|EN SU LUGAR?",
     "NADIE LE CREYÓ|HASTA QUE PASÓ ESTO",
-    "ESPERA EL FINAL|NO TE LO PIERDAS",
+    "ESPERA AL FINAL|NO TE LO PIERDAS",
+    "MIRA HASTA EL FINAL|VALE LA PENA",
+    "EL KARMA EXISTE|Y ESTO LO DEMUESTRA",
+    "PENSÓ QUE NADIE|LO ESTABA VIENDO",
+    "NUNCA JUZGUES|ANTES DE TIEMPO",
+    "¿FUE JUSTO ESTO?|MIRA LO QUE PASÓ",
+    "UN GIRO QUE|NADIE ESPERABA",
+    "LO QUE DESCUBRIÓ|CAMBIÓ TODO",
+    "ESTO SE SALIÓ|DE CONTROL",
 ]
 
 _EMOJI_RE = re.compile(
@@ -136,15 +156,34 @@ def generar_hook_con_gemini(raw_desc, api_key=None):
     return None
 
 
+def es_hashtag_generico(tag):
+    """Detecta si un hashtag es una etiqueta técnica, genérica o de nicho que no debe usarse como título."""
+    b = tag.lstrip("#").lower().strip()
+    if len(b) < 3 or b in HASHTAGS_GENERICOS:
+        return True
+    if re.fullmatch(r"(parte|part|cap|capitulo|ep|episodio)\d*", b):
+        return True
+    for kw in PALABRAS_CLAVE_GENERICAS:
+        if kw in b:
+            return True
+    return False
+
+
 def limpiar_texto_descripcion(raw_desc):
-    """Quita hashtags, @menciones, enlaces, emojis y prefijos como 'Episodio 1:', 'Parte 2:'."""
+    """Quita hashtags, @menciones, enlaces, emojis y prefijos de relleno (POV, Episodio, Como cuando, etc.)."""
     t = raw_desc or ""
     t = re.sub(r"https?://\S+", "", t)
     t = re.sub(r"#\w+", "", t)
     t = re.sub(r"(?i)\b(respuesta\s+a|respondiendo\s+a|replying\s+to|responder\s+a)\s+@?[\w.]+", "", t)
     t = re.sub(r"@[\w.]+", "", t)
     t = _EMOJI_RE.sub(" ", t)
-    # Quitar prefijos que no aportan valor al gancho
+
+    # Quitar prefijos que arruinan el gancho
+    t = re.sub(r"^(?:pov|pov:)\s*", "", t, flags=re.IGNORECASE).strip()
+    t = re.sub(r"^(?:como\s+cuando|cuándo\s+tú|cuando\s+tu|cuando)\s+", "", t, flags=re.IGNORECASE).strip()
+    t = re.sub(r"^(?:bueno\s+)?(?:chicos|amigos|gente|oigan|hola)\b.*?[,:]\s*", "", t, flags=re.IGNORECASE).strip()
+    t = re.sub(r"^(?:hoy\s+les\s+(?:traigo|muestro|cuento))\b.*?[,:]?\s*", "", t, flags=re.IGNORECASE).strip()
+    t = re.sub(r"^(?:en\s+este\s+video|en\s+este\s+clip|miren\s+este\s+video)\b.*?[,:]?\s*", "", t, flags=re.IGNORECASE).strip()
     t = re.sub(r"^(?:episodio|capitulo|capítulo|cap|parte|part|p|video)\s*\d+[\s:\-–—|]*", "", t, flags=re.IGNORECASE).strip()
     t = re.sub(r"\s+", " ", t).strip(" -_.,:;¡!¿?|~")
     return t
@@ -160,13 +199,11 @@ def _hashtag_a_palabras(tag):
 
 def tema_desde_hashtags(raw_desc):
     for h in re.findall(r"#\w+", raw_desc or ""):
-        base = h.lstrip("#").lower()
-        if base in HASHTAGS_GENERICOS or len(base) < 4:
-            continue
-        if re.fullmatch(r"(parte|part)\d*", base):
+        if es_hashtag_generico(h):
             continue
         palabras = _hashtag_a_palabras(h)
-        if palabras and len(palabras) <= 24:
+        words = palabras.split()
+        if palabras and 1 <= len(words) <= 3 and len(palabras) <= 20:
             return palabras
     return ""
 
@@ -180,8 +217,8 @@ def recortar_hook_inteligente(texto):
     if not t:
         return "HISTORIA INCREÍBLE|MIRA EL FINAL"
 
-    # 1. Si hay exclamación ¡...!, tomarla con prioridad
-    m_exc = re.search(r"[¡!]([^!]+)[!]", t)
+    # 1. Si hay exclamación ¡...! o pregunta ¿...?, tomarla con prioridad
+    m_exc = re.search(r"[¡!¿?]([^!?]+)[!?]", t)
     if m_exc and len(m_exc.group(1).split()) >= 3:
         frase = m_exc.group(1).strip()
     else:
@@ -198,17 +235,17 @@ def recortar_hook_inteligente(texto):
     # 3. Limpiar signos de puntuación restantes
     frase = re.sub(r'[¡!¿?\"\'“”]', '', frase).strip()
 
-    # 4. Limitar a máximo 6 palabras con significado
+    # 4. Limitar a máximo 7-8 palabras para mantener la idea completa sin mutilarla
     palabras = frase.split()
-    if len(palabras) > 6:
-        palabras = palabras[:6]
+    if len(palabras) > 8:
+        palabras = palabras[:8]
 
-    # 5. Evitar terminar en palabras colgantes (preposiciones, conjunciones, pronombres sueltos)
+    # 5. Evitar terminar en palabras colgantes
     while palabras and palabras[-1].lower() in PALABRAS_COLGANTES:
         palabras.pop()
 
     if not palabras or len(palabras) < 2:
-        palabras = [w for w in re.sub(r'[¡!¿?\"\'“”]', '', t).split() if w][:5]
+        palabras = [w for w in re.sub(r'[¡!¿?\"\'“”]', '', t).split() if w][:6]
         while palabras and palabras[-1].lower() in PALABRAS_COLGANTES:
             palabras.pop()
 
@@ -252,7 +289,7 @@ def generar_hook_inteligente(raw_desc, semilla="", api_key=None):
 
     texto = limpiar_texto_descripcion(raw_desc)
     letras = re.findall(r"[A-Za-zÁÉÍÓÚÑáéíóúñ]{2,}", texto)
-    if len(letras) >= 2 or (len(letras) == 1 and len(letras[0]) >= 5):
+    if len(letras) >= 3 or (len(letras) == 2 and len(" ".join(letras)) >= 10):
         return recortar_hook_inteligente(raw_desc), "descripcion"
 
     tema = tema_desde_hashtags(raw_desc)
@@ -367,16 +404,21 @@ def generar_copy_reel_con_gemini(raw_desc, hook="", cuenta_id="", hashtags_base=
     hashtags_base = list(hashtags_base or ["#reels", "#viral", "#parati"])
     hashtags_encontrados = re.findall(r"#\w+", raw_desc or "")
 
-    # Extraer palabras temáticas de la descripción (ej: frutas o emociones)
+    # Extraer palabras temáticas de la descripción (ej: frutas o emociones) usando límites de palabra (\b)
     temas_extra = []
     palabras_desc = (texto + " " + hook_limpio).lower()
     for kw in ["fresa", "manzana", "sandia", "aguacate", "platano", "limon", "naranja", "pera", "uva", "capibara", "amor", "traicion", "desamor", "humor", "reflexion", "fe", "dios", "milagro", "familia", "amigos", "secreto"]:
-        if kw in palabras_desc:
+        if re.search(r"\b" + re.escape(kw) + r"\b", palabras_desc):
             temas_extra.append(f"#{kw}")
+
+    # Filtrar hashtags encontrados para no meter etiquetas técnicas o de relleno
+    hashtags_limpios = [h for h in hashtags_encontrados if not es_hashtag_generico(h)]
+    if not hashtags_limpios:
+        hashtags_limpios = [h for h in hashtags_encontrados if len(h) <= 12 and not any(k in h.lower() for k in ["animacion", "3d", "historia"])]
 
     # Combinar hashtags: 3 fijos de la cuenta + hasta 2 temáticos dinámicos
     tags_finales = []
-    for h in hashtags_base[:3] + temas_extra[:2] + hashtags_encontrados[:2]:
+    for h in hashtags_base[:3] + temas_extra[:2] + hashtags_limpios[:2]:
         if h.lower() not in [x.lower() for x in tags_finales]:
             tags_finales.append(h)
         if len(tags_finales) >= 5:
@@ -436,7 +478,17 @@ def generar_copy_reel_con_gemini(raw_desc, hook="", cuenta_id="", hashtags_base=
 
     # 3. Fallback inteligente si Gemini no está o falla
     if not cuerpo_copy:
-        titulo = hook_limpio if hook_limpio else (texto.capitalize() if texto else "Una historia impactante")
+        t_base = hook_limpio if hook_limpio else (texto or "Una historia impactante")
+        if t_base.isupper():
+            palabras_t = t_base.lower().split()
+            if palabras_t:
+                palabras_t[0] = palabras_t[0].capitalize()
+                titulo = " ".join(palabras_t).rstrip(".")
+            else:
+                titulo = "Una historia impactante"
+        else:
+            titulo = t_base.strip().rstrip(".")
+
         es_biblia = any(k in (cuenta_id or "").lower() for k in ["biblia", "cristian", "dios", "fe", "reflexion"])
         if es_biblia:
             cuerpo_copy = f"✨ Reflexión: {titulo}.\n\n¿Qué enseñanza deja esta palabra en tu corazón hoy? Déjanos tu Amén en los comentarios 🙏👇"
