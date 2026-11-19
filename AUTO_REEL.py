@@ -422,17 +422,23 @@ def render(src, dur, hook, cta, out_path, zoom_w=1090, zoom_h=1939, cta_color="y
             "-c:v", "h264_amf", "-quality", "speed", "-b:v", "3500k", "-maxrate", "4200k", "-bufsize", "6000k"]
         rc, out = run_ff(cmd)
 
-    # 2) CPU (Modo Turbo en la nube: ultrafast + bitrate óptimo para Reels instantáneos)
+    # Estándar VBV Constrained CRF para Reels: máxima nitidez OLED sin conflicto -b:v y techo garantizado < 38 MB
+    dur_seg = max(float(dur or 30.0), 10.0)
+    max_kbps = min(3200, max(1200, int((38 * 8 * 1024) / dur_seg) - 192))
+    maxrate_str = f"{max_kbps}k"
+    bufsize_str = f"{int(max_kbps * 1.56)}k"
+
+    # 2) CPU (Modo Turbo VBV Constrained CRF: -crf 22 sin -b:v conflictivo)
     if rc != 0 or not os.path.exists(out_path):
         if os.name == "nt":
             print("  GPU no disponible, usando CPU...")
         cmd = common[:]
         is_cloud = os.environ.get("GITHUB_ACTIONS") == "true" or os.name != "nt"
         preset_val = "ultrafast" if is_cloud else "veryfast"
-        crf_val = "24" if is_cloud else "22"
+        crf_val = "22"
         cmd[cmd.index("-pix_fmt"):cmd.index("-pix_fmt")] = [
             "-c:v", "libx264", "-preset", preset_val, "-tune", "fastdecode",
-            "-crf", crf_val, "-b:v", "2600k", "-maxrate", "3000k", "-bufsize", "4500k", "-threads", "0"
+            "-crf", crf_val, "-maxrate", maxrate_str, "-bufsize", bufsize_str, "-threads", "0"
         ]
         rc, out = run_ff(cmd)
 
@@ -443,8 +449,8 @@ def render(src, dur, hook, cta, out_path, zoom_w=1090, zoom_h=1939, cta_color="y
         cmd = common[:]
         cmd[cmd.index("-filter_complex") + 1] = fc_rel
         cmd[cmd.index("-pix_fmt"):cmd.index("-pix_fmt")] = [
-            "-c:v", "libx264", "-preset", "ultrafast", "-crf", "24",
-            "-b:v", "2600k", "-maxrate", "3000k", "-bufsize", "4500k"
+            "-c:v", "libx264", "-preset", "ultrafast", "-crf", "22",
+            "-maxrate", maxrate_str, "-bufsize", bufsize_str, "-threads", "0"
         ]
         rc, out = run_ff(cmd)
 

@@ -1929,19 +1929,28 @@ def main():
                 f"🔗 <b>Fuente:</b> {url}\n\n"
                 f"👇 <b>¿Te gusta el resultado? Elige la cuenta para publicarlo:</b>"
             )
-            botones_aprobacion = [
-                [
-                    {"text": "🍓 @frutnovelas776", "callback_data": "subir:frutnovelas776"},
-                    {"text": "🍍 @novelas_frutosass", "callback_data": "subir:novelas_frutosass"}
-                ],
-                [
-                    {"text": "🍉 @frutnovelas777", "callback_data": "subir:frutnovelas777"},
-                    {"text": "🍇 @novel_asanimadas", "callback_data": "subir:novel_asanimadas"}
-                ],
-                [
-                    {"text": "🗑️ Descartar Video", "callback_data": "cancelar"}
-                ]
+            emojis_btn = ["🍓", "🍍", "🍉", "🍇", "🍊", "🍒", "🥝", "🍑", "🥭", "🍏"]
+            cuentas_disp = [
+                (k_c, v_c) for k_c, v_c in granja.items()
+                if v_c.get("activa", False) and (not chat_id_tg or str(v_c.get("owner_chat_id", "")) == str(chat_id_tg))
             ]
+            if not cuentas_disp:
+                cuentas_disp = [(k_c, v_c) for k_c, v_c in granja.items() if v_c.get("activa", False)]
+            if not cuentas_disp:
+                cuentas_disp = list(granja.items())[:4]
+
+            botones_aprobacion = []
+            fila_actual = []
+            for idx_b, (k_c, v_c) in enumerate(cuentas_disp):
+                em = emojis_btn[idx_b % len(emojis_btn)]
+                nom_b = v_c.get("nombre") or f"@{k_c}"
+                fila_actual.append({"text": f"{em} {nom_b}", "callback_data": f"subir:{k_c}"})
+                if len(fila_actual) == 2:
+                    botones_aprobacion.append(fila_actual)
+                    fila_actual = []
+            if fila_actual:
+                botones_aprobacion.append(fila_actual)
+            botones_aprobacion.append([{"text": "🗑️ Descartar Video", "callback_data": "cancelar"}])
             ok_tg = enviar_video_telegram(
                 chat_id_tg,
                 out_path,
@@ -2046,10 +2055,11 @@ def main():
         quitar_de_cola(raw_cola_url or url_manual)
 
     resumen_links = "\n".join(links_publicados)
-    if chat_id_tg and not modo_solo_render:
+    # Solo enviar resumen global si se publicó en lote a más de 1 cuenta (evita duplicar la notificación individual)
+    if chat_id_tg and not modo_solo_render and len(links_publicados) > 1:
         enviar_mensaje_telegram(
             chat_id_tg,
-            f"✅ ¡Reel publicado en la Granja!\n\n📌 Hook: {info['hook']}\n📝 Copy: {info['caption_ig']}\n\n🔗 Publicaciones:\n{resumen_links}"
+            f"✅ ¡Reel publicado en la Granja ({len(links_publicados)} cuentas)!\n\n📌 Hook: {info['hook']}\n📝 Copy: {info['caption_ig']}\n\n🔗 Publicaciones:\n{resumen_links}"
         )
 
     if vid_id not in procesados:
