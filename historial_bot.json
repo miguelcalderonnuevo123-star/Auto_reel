@@ -2,6 +2,7 @@
   "account_url": "https://www.tiktok.com/@helloword.visuals",
   "channel_id": "MS4wLjABAAAACLle2hko75dXsCGmRLFp0i-pA-FOH-Ds8uJ7Nr7ETr6Mt22MsXZYMKxKmRjH3R7K",
   "processed_ids": [
+    "7708560032559811862",
     "7707004008799718678",
     "7706975144052280598",
     "7707444873812512022",
@@ -118,9 +119,21 @@
     "verduras animadas zanahoria brócoli tomate maíz": 1,
     "cargó 100 libras en cada mano": 2,
     "lo que le pasó a historiasdefrutas": 1,
-    "lo que le pasó a animacion 3 d": 1
+    "lo que le pasó a animacion 3 d": 1,
+    "67 meses embarazada ganó los cien mil": 1
   },
   "history": [
+    {
+      "id": "7708560032559811862",
+      "date": "2026-11-19 21:50:17",
+      "title": "🥭🤰 ¡LLEVABA 67 MESES EMBARAZADA Y SE METIÓ A UNA CARRERA POR $100,000 PESOS! 😱🏆 | PARTE 1 #HistoriasDeFrutas #Frutas #Animacion3D #HumorMexicano #ParaTi",
+      "hook": "67 MESES EMBARAZADA|GANÓ LOS CIEN MIL",
+      "caption_ig": "¿Una mujer con 67 meses de embarazo corriendo por cien mil pesos? Nadie creía lo que estaba viendo en la línea de salida 😱\n¿Tú te habrías atrevido a participar en su lugar? Te leo en comentarios 👇\n\n#aventuras #reels #viral #Frutas #ParaTi",
+      "accounts": [
+        "cuenta_1"
+      ],
+      "ig_link": "• @aventuras56_6: https://www.instagram.com/reel/Df8FUvBswGt/"
+    },
     {
       "id": "7707004008799718678",
       "date": "2026-11-19 02:32:59",
@@ -894,7 +907,7 @@
     "frutnovelas777": 1794698751.277388,
     "novel_asanimadas": 1794669599.2287304,
     "novelas_frutosass": 1794703815.651194,
-    "cuenta_1": 1795055565.0929265
+    "cuenta_1": 1795125016.6929207
   },
   "account_first_seen": {
     "frutnovelas776": 1794571550.604157,
@@ -1205,10 +1218,8 @@
       "date": "2026-11-13 12:05"
     }
   ],
-  "pausa_cuentas": {
-    "cuenta_1": 1795048548.3801892
-  },
+  "pausa_cuentas": {},
   "account_style_rot": {
-    "cuenta_1": 9
+    "cuenta_1": 10
   }
 }
