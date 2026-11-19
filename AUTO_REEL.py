@@ -101,6 +101,7 @@ def run_ff(cmd, timeout=180):
     p = subprocess.Popen(cmd, stdout=tmp, stderr=subprocess.STDOUT)
     t0 = time.time()
     timed_out = False
+    ticks = 0
     while p.poll() is None:
         if timeout and (time.time() - t0) > timeout:
             timed_out = True
@@ -109,8 +110,10 @@ def run_ff(cmd, timeout=180):
             except Exception:
                 pass
             break
-        time.sleep(1)
-        print(".", end="", flush=True)
+        time.sleep(0.15)
+        ticks += 1
+        if ticks % 7 == 0:
+            print(".", end="", flush=True)
     print("", flush=True)
     tmp.close()
     out = ""

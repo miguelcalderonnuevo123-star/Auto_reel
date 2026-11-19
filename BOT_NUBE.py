@@ -432,7 +432,7 @@ def crear_placa_dorada(texto=None):
     return temp_badge
 
 
-def detectar_posicion_marca(video_path, modo_marca="auto"):
+def detectar_posicion_marca(video_path, modo_marca="auto", badge_text=None):
     """
     Devuelve (x, y, descripcion) sobre lienzo 1080x1920 o None si modo_marca == 'no'.
     Modos: 'auto', 'arriba', 'abajo', 'no'
@@ -445,6 +445,11 @@ def detectar_posicion_marca(video_path, modo_marca="auto"):
         return 650, 320, "ARRIBA (Forzado)"
     if modo == "abajo":
         return 360, 1460, "ABAJO (Forzado)"
+
+    # Si la cuenta no es del nicho Frutinovelas (ej: aventuras56_6), saltar el escaneo OpenCV de plantillas de frutas
+    b_low = (badge_text or "").lower()
+    if b_low and not any(k in b_low for k in ("frut", "novela", "historia", "reino")):
+        return None
 
     # Modo 'auto': usa OpenCV y las plantillas en assets/ si están disponibles
     try:
@@ -483,7 +488,7 @@ def detectar_posicion_marca(video_path, modo_marca="auto"):
 
 def aplicar_placa_marca(video_path, modo_marca="auto", badge_text=None):
     """Si detecta marca de agua (o si el modo es forzado), estampa la placa personalizada con la cuenta actual."""
-    pos = detectar_posicion_marca(video_path, modo_marca)
+    pos = detectar_posicion_marca(video_path, modo_marca, badge_text=badge_text)
     if not pos:
         print("  Marca de agua: No se detectó marca externa. Video limpio.")
         return False
@@ -1562,6 +1567,10 @@ def subir_reel_instagram(video_path, caption, cover_path=None, historial=None, c
         kwargs["thumbnail"] = Path(cover_path)
         print(f"  [{cuenta_id}] Portada personalizada adjunta: {os.path.basename(cover_path)}")
 
+    # Pre-renderizar en segundo plano el video teaser de 15s de la Historia MIENTRAS el Reel se sube a Instagram
+    auto_story = cfg_cuenta.get("auto_story", True)
+    future_teaser = _IA_BG_POOL.submit(generar_teaser_historia, video_path, 15.0) if auto_story else None
+
     # Reintento inteligente de subida (hasta 3 intentos con espera de 30s si hay fallo temporal)
     ultimo_err = ""
     for intento in range(1, 4):
@@ -1606,11 +1615,10 @@ def subir_reel_instagram(video_path, caption, cover_path=None, historial=None, c
                     print(f"  [{cuenta_id}] Aviso publicando auto-comentario: {ec}")
 
             # [Mejora Viral] Auto-Compartir Reel en Historia: VIDEO real de 15 segundos con audio + Link Sticker
-            auto_story = cfg_cuenta.get("auto_story", True)
             if auto_story and pk and pk != "OK":
                 try:
                     from instagrapi.types import StoryLink
-                    print(f"  [{cuenta_id}] 📲 Creando video teaser de 15 segundos con audio para la Historia...")
+                    print(f"  [{cuenta_id}] 📲 Preparando video teaser de 15 segundos con audio para la Historia...")
                     media_pk_int = int(cl.media_pk(str(pk)))
 
                     shortcode = code or ""
@@ -1621,8 +1629,9 @@ def subir_reel_instagram(video_path, caption, cover_path=None, historial=None, c
                             shortcode = ""
                     reel_url = f"https://www.instagram.com/reel/{shortcode}/" if shortcode else (link if str(link).startswith("http") else "https://www.instagram.com/")
 
-                    # 1. Generar video real de 15s con audio y banners visuales ("NUEVO REEL" + "VER REEL COMPLETO")
-                    teaser_vid = generar_teaser_historia(video_path, dur_seg=15.0)
+                    # 1. Obtener el teaser de 15s ya pre-renderizado en paralelo mientras subía el Reel
+                    teaser_vid = future_teaser.result(timeout=45) if future_teaser else generar_teaser_historia(video_path, dur_seg=15.0)
+                    future_teaser = None
                     thumb_vid = (teaser_vid + ".thumb.jpg") if teaser_vid else None
                     story_res = None
 
@@ -2158,6 +2167,7 @@ def main():
             )
             if ig_link:
                 last_uploads[cid] = time.time()
+                (historial.get("pausa_cuentas") or {}).pop(cid, None)
                 first_seen = historial.setdefault("account_first_seen", {})
                 if cid not in first_seen:
                     first_seen[cid] = time.time()

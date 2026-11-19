@@ -138,6 +138,11 @@ def generar_hook_con_gemini(raw_desc, api_key=None):
                     lines = [l.strip() for l in cand.split("\n") if l.strip()]
                     if len(lines) >= 2:
                         cand = f"{lines[0]}|{lines[1]}"
+                if "|" not in cand:
+                    w_cand = cand.upper().split()
+                    if 2 <= len(w_cand) <= 8:
+                        mitad = max(1, len(w_cand) // 2)
+                        cand = f"{' '.join(w_cand[:mitad])}|{' '.join(w_cand[mitad:])}"
                 if "|" in cand:
                     partes = [p.strip().upper() for p in cand.split("|") if p.strip()]
                     if len(partes) >= 2:
@@ -236,10 +241,13 @@ def recortar_hook_inteligente(texto):
     # 3. Limpiar signos de puntuación restantes
     frase = re.sub(r'[¡!¿?\"\'“”]', '', frase).strip()
 
-    # 4. Limitar a máximo 7-8 palabras para mantener la idea completa sin mutilarla
+    # 4. Limitar a máximo 8-10 palabras para mantener la idea completa sin mutilar el verbo final
     palabras = frase.split()
-    if len(palabras) > 8:
-        palabras = palabras[:8]
+    max_w = 8
+    while max_w < len(palabras) and max_w < 10 and palabras[max_w - 1].lower() in PALABRAS_COLGANTES:
+        max_w += 1
+    if len(palabras) > max_w:
+        palabras = palabras[:max_w]
 
     # 5. Evitar terminar en palabras colgantes
     while palabras and palabras[-1].lower() in PALABRAS_COLGANTES:
