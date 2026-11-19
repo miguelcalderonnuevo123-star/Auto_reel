@@ -326,7 +326,7 @@ def get_duration(path):
     return meta.get("duration")
 
 
-def build_filters(dur, hook, cta, zoom_w=1090, zoom_h=1939, cta_color="yellow", speed_factor=1.0, is_vertical=True, font_file="arialbd.ttf"):
+def build_filters(dur, hook, cta, zoom_w=1090, zoom_h=1939, cta_color="yellow", speed_factor=1.0, is_vertical=True, font_file="arialbd.ttf", has_audio=True):
     import random
 
     # Mejora 1: Micro-aceleración dinámica anti-detección (1.03x a 1.06x)
@@ -438,10 +438,12 @@ def build_filters(dur, hook, cta, zoom_w=1090, zoom_h=1939, cta_color="yellow", 
         fg = f"[v_fg]scale={TARGET_W}:-2:flags={scale_flag}[fg];"
         ov = f"[bg][fg]overlay=0:(H-h)/2,{eq_filt}{noise_filt}{hook_filt}{cta_filt}{pts_filt}[v];"
         v_chain = f"[0:v]split=2[v_bg][v_fg];{bg}{fg}{ov}"
-    return (
-        f"{v_chain}"
-        f"[0:a]{atempo_filt}{audio_norm}[a]"
-    )
+    if has_audio:
+        a_chain = f"[0:a]{atempo_filt}{audio_norm}[a]"
+    else:
+        dur_out = max(1.0, float(dur or 30.0) / max(0.5, float(speed_factor or 1.0)))
+        a_chain = f"anullsrc=channel_layout=stereo:sample_rate=44100,atrim=0:{dur_out:.2f}[a]"
+    return f"{v_chain}{a_chain}"
 
 
 def limpiar_metadatos(path):
@@ -466,18 +468,20 @@ def limpiar_metadatos(path):
     return False
 
 
-def render(src, dur, hook, cta, out_path, zoom_w=1090, zoom_h=1939, cta_color="yellow", speed_factor=1.0, trim_start=0.0, is_vertical=True, font_file="arialbd.ttf"):
-    fc = build_filters(dur, hook, cta, zoom_w=zoom_w, zoom_h=zoom_h, cta_color=cta_color, speed_factor=speed_factor, is_vertical=is_vertical, font_file=font_file)
+def render(src, dur, hook, cta, out_path, zoom_w=1090, zoom_h=1939, cta_color="yellow", speed_factor=1.0, trim_start=0.0, is_vertical=True, font_file="arialbd.ttf", has_audio=True):
+    fc = build_filters(dur, hook, cta, zoom_w=zoom_w, zoom_h=zoom_h, cta_color=cta_color, speed_factor=speed_factor, is_vertical=is_vertical, font_file=font_file, has_audio=has_audio)
     import random
     # Capa 4 Anti-Detección: Desincronización de cadencia de fotogramas (FPS Drift)
     fps_val = random.choice(["29.97", "30.03", "29.98", "30.02"])
-    # Procesar el video completo al 100% de inicio a fin (sin recortes artificiales de -ss ni -t)
+    # Procesar el video completo al 100% de inicio a fin con limpieza bitexact de metadatos integrada en 1 sola pasada
     common = [
         FFMPEG, "-y",
         "-i", src,
         "-filter_complex", fc,
         "-map", "[v]", "-map", "[a]",
         "-map_metadata", "-1",
+        "-fflags", "+bitexact", "-flags:v", "+bitexact", "-flags:a", "+bitexact",
+        "-metadata:s:v:0", "encoder=", "-metadata:s:a:0", "encoder=",
         "-metadata", "title=", "-metadata", "comment=", "-metadata", "encoder=",
         "-pix_fmt", "yuv420p", "-r", fps_val,
         "-c:a", "aac", "-b:a", "192k", "-ar", "44100",

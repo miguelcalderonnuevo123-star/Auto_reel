@@ -185,7 +185,7 @@ def obtener_token_telegram():
 def enviar_mensaje_telegram(chat_id, texto, botones=None):
     tok = obtener_token_telegram()
     if not tok or not chat_id:
-        return
+        return None
     payload = {"chat_id": chat_id, "text": texto, "parse_mode": "HTML", "disable_web_page_preview": False}
     if botones:
         payload["reply_markup"] = {"inline_keyboard": botones}
@@ -197,13 +197,30 @@ def enviar_mensaje_telegram(chat_id, texto, botones=None):
         )
         if r.status_code != 200:
             payload.pop("parse_mode", None)
-            requests.post(
+            r = requests.post(
                 f"https://api.telegram.org/bot{tok}/sendMessage",
                 json=payload,
                 timeout=15,
             )
+        if r.status_code == 200:
+            return ((r.json() or {}).get("result") or {}).get("message_id")
     except Exception as e:
         print(f"  Aviso Telegram: {e}")
+    return None
+
+
+def borrar_mensaje_telegram(chat_id, message_id):
+    tok = obtener_token_telegram()
+    if not tok or not chat_id or not message_id:
+        return
+    try:
+        requests.post(
+            f"https://api.telegram.org/bot{tok}/deleteMessage",
+            json={"chat_id": chat_id, "message_id": message_id},
+            timeout=10,
+        )
+    except Exception:
+        pass
 
 
 def enviar_video_telegram(chat_id, video_path, caption="", botones=None):
@@ -469,7 +486,7 @@ def aplicar_placa_marca(video_path, modo_marca="auto", badge_text=None):
     pos = detectar_posicion_marca(video_path, modo_marca)
     if not pos:
         print("  Marca de agua: No se detectó marca externa. Video limpio.")
-        return True
+        return False
 
     nombre_badge = (badge_text or BADGE_TEXT).strip()
     x, y, desc_pos = pos
@@ -1913,12 +1930,13 @@ def main():
             print("  Duplicado por contenido: omitido.")
             return 0
         enviar_mensaje_telegram(chat_id_tg, aviso_dup + "Como lo pediste tú, continúo igualmente.")
-    enviar_mensaje_telegram(
+    msg_render_id = enviar_mensaje_telegram(
         chat_id_tg,
         f"📥 Video descargado ({dur:.0f}s) | Hook: {info['hook']}\n🎬 Renderizando 1080x1920 con FFmpeg en la nube..."
     )
 
     # Determinar qué cuentas de la granja van a recibir este video (filtrando por dueño si viene de Telegram)
+    cuenta_fallback = next((k for k, v in granja.items() if v.get("activa", False)), next(iter(granja.keys()), "frutnovelas776"))
     if cuenta_objetivo in ("todas", "all"):
         if chat_id_cli:
             cuentas_a_subir = [
@@ -1928,9 +1946,16 @@ def main():
         else:
             cuentas_a_subir = [k for k, v in granja.items() if v.get("activa", False)]
         if not cuentas_a_subir:
-            cuentas_a_subir = ["frutnovelas776"]
+            cuentas_a_subir = [cuenta_fallback]
     else:
-        cuentas_a_subir = [cuenta_objetivo if cuenta_objetivo in granja else "frutnovelas776"]
+        if cuenta_objetivo in granja:
+            cuentas_a_subir = [cuenta_objetivo]
+        else:
+            match_alias = next(
+                (k for k, v in granja.items() if (v.get("nombre") or "").strip().lstrip("@").lower() == cuenta_objetivo.lstrip("@")),
+                None
+            )
+            cuentas_a_subir = [match_alias or cuenta_fallback]
 
     links_publicados = []
     archivos_temporales = [src]
@@ -1956,14 +1981,15 @@ def main():
             speed_factor=estilo.get("speed_factor", 1.0),
             trim_start=estilo.get("trim_start", 0.0),
             is_vertical=v_meta.get("is_vertical", True),
+            has_audio=v_meta.get("has_audio", True),
         )
         if not ok:
             print(f"  [{cid}] ERROR durante el renderizado con FFmpeg.")
             continue
 
         badge_cuenta = cfg_c.get("nombre") or cid
-        aplicar_placa_marca(out_path, modo_marca=modo_marca, badge_text=badge_cuenta)
-        AUTO_REEL.limpiar_metadatos(out_path)
+        if aplicar_placa_marca(out_path, modo_marca=modo_marca, badge_text=badge_cuenta):
+            AUTO_REEL.limpiar_metadatos(out_path)
         # Portada con la identidad visual rotativa coordinada con el video
         cover_jpg = generar_portada_reel(
             out_path, info["hook"], dur,
@@ -2013,6 +2039,7 @@ def main():
                 caption=caption_previa,
                 botones=botones_aprobacion
             )
+            borrar_mensaje_telegram(chat_id_tg, msg_render_id)
             if ok_tg:
                 print("  ✅ Video de vista previa enviado a Telegram con éxito.")
             else:
@@ -2103,6 +2130,8 @@ def main():
                     enviar_video_telegram(chat_id_tg, out_path, caption=caption_fallo)
         else:
             links_publicados.append(f"• {cfg_c.get('nombre', cid)}: SOLO_RENDER ({out_path})")
+
+    borrar_mensaje_telegram(chat_id_tg, msg_render_id)
 
     if not links_publicados:
         return 1
