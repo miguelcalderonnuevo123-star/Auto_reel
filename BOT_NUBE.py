@@ -1109,11 +1109,15 @@ def obtener_info_video_directo(url):
             )
             info = (r.json() or {}).get("data") or {}
             if info:
+                p_url = info.get("hdplay") or info.get("play") or info.get("wmplay") or ""
+                if p_url.startswith("/"):
+                    p_url = "https://www.tikwm.com" + p_url
                 return {
                     "id": str(info.get("id") or vid_id),
                     "url": url,
                     "description": (info.get("title") or "").strip(),
                     "timestamp": int(info.get("create_time") or time.time()),
+                    "play_url": p_url,
                 }
         except Exception:
             pass
@@ -1148,11 +1152,15 @@ def obtener_info_video_directo(url):
         )
         info = (r.json() or {}).get("data") or {}
         if info:
+            p_url = info.get("hdplay") or info.get("play") or info.get("wmplay") or ""
+            if p_url.startswith("/"):
+                p_url = "https://www.tikwm.com" + p_url
             return {
                 "id": str(info.get("id") or vid_id),
                 "url": url,
                 "description": (info.get("title") or "").strip(),
                 "timestamp": int(info.get("create_time") or time.time()),
+                "play_url": p_url,
             }
     except Exception:
         pass
@@ -1167,11 +1175,16 @@ def obtener_info_video_directo(url):
         )
         info_lt = r_lt.json() or {}
         if info_lt.get("desc") or info_lt.get("vid"):
+            p_lt = next(
+                (x.get("a") for x in (info_lt.get("links") or []) if x.get("a") and "mp3" not in str(x.get("t", "")).lower()),
+                ""
+            )
             return {
                 "id": str(info_lt.get("vid") or vid_id),
                 "url": url,
                 "description": (info_lt.get("desc") or "").strip(),
                 "timestamp": int(time.time()),
+                "play_url": p_lt,
             }
     except Exception:
         pass
@@ -1450,7 +1463,7 @@ def subir_reel_instagram(video_path, caption, cover_path=None, historial=None, c
         enviar_mensaje_telegram(chat_id_tg, msg_err)
         return False
 
-    cl = Client(delay_range=[2.3, 4.8], proxy=proxy_url)
+    cl = Client(delay_range=[1.2, 2.5], proxy=proxy_url)
     try:
         cl.set_device(dict(device_cfg))
     except Exception:
@@ -1554,7 +1567,7 @@ def subir_reel_instagram(video_path, caption, cover_path=None, historial=None, c
             comentario_cfg = (cfg_cuenta.get("auto_comment") or "").strip()
             if comentario_cfg.lower() not in ("no", "off", "none", "0") and pk and pk != "OK":
                 try:
-                    time.sleep(3.5)
+                    time.sleep(1.5)
                     comentario_auto = generar_comentario_viral(
                         parte_num=parte_num,
                         custom_comment=comentario_cfg,
@@ -1570,7 +1583,7 @@ def subir_reel_instagram(video_path, caption, cover_path=None, historial=None, c
                     # Fijar el comentario arriba (Pin Comment) para máxima visibilidad
                     if c_pk:
                         try:
-                            time.sleep(1.5)
+                            time.sleep(1.0)
                             try:
                                 cl.comment_pin(str(pk), str(c_pk))
                             except TypeError:
@@ -1585,7 +1598,6 @@ def subir_reel_instagram(video_path, caption, cover_path=None, historial=None, c
             auto_story = cfg_cuenta.get("auto_story", True)
             if auto_story and pk and pk != "OK":
                 try:
-                    time.sleep(3.5)
                     from instagrapi.types import StoryLink
                     print(f"  [{cuenta_id}] 📲 Creando video teaser de 15 segundos con audio para la Historia...")
                     media_pk_int = int(cl.media_pk(str(pk)))
@@ -1921,9 +1933,9 @@ def main():
                 enviar_mensaje_telegram(chat_id_tg, msg_err)
             return 1
 
-    # Paso A: Descargar con AUTO_REEL (usando vid_id para cachear links cortos vt.tiktok.com)
+    # Paso A: Descargar con AUTO_REEL (usando vid_id para cachear links cortos y play_url directo sin doble llamada API)
     slug = AUTO_REEL.slug_from_url(url, vid_id=vid_id)
-    src = AUTO_REEL.download(url, slug)
+    src = AUTO_REEL.download(url, slug, direct_play_url=elegido.get("play_url"))
     if not src:
         if viene_de_cola:
             quitar_de_cola(raw_cola_url or url_manual)
@@ -1946,9 +1958,9 @@ def main():
         return 1
     print(f"  Duración medida: {dur:.1f} s | Vertical: {v_meta.get('is_vertical', True)} | Audio: {v_meta.get('has_audio', True)}")
 
-    # Detección de duplicados por contenido (aunque venga de otro canal o con otro ID)
-    huellas = huella_video(src, dur)
-    dup = buscar_duplicado(historial, huellas)
+    # Detección de duplicados por contenido (solo en piloto automático; en manual o vista previa ahorramos 3 procesos FFmpeg)
+    huellas = huella_video(src, dur) if auto_diario else []
+    dup = buscar_duplicado(historial, huellas) if huellas else None
     if dup:
         aviso_dup = f"♻️ Este video es casi idéntico a uno ya publicado (ID {dup.get('id')}). "
         if auto_diario:

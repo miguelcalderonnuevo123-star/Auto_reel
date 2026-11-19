@@ -2,7 +2,5 @@ yt-dlp
 instagrapi
 Pillow
 requests
-imageio-ffmpeg
 pynacl
-moviepy
 

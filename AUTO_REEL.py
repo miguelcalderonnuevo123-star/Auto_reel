@@ -261,12 +261,34 @@ def descargar_respaldo_espejo(url, dest):
     return None
 
 
-def download(url, slug):
-    """Descarga a refs\\slug.mp4 con cuádruple motor (yt-dlp + TikWM API + Espejos LoveTik/TiklyDown). Devuelve la ruta o None."""
+def download(url, slug, direct_play_url=None):
+    """Descarga a refs\\slug.mp4 reutilizando direct_play_url instantáneo o cuádruple motor. Devuelve la ruta o None."""
     dest = os.path.join(REFS, slug + ".mp4")
     if os.path.exists(dest) and os.path.getsize(dest) > 100000:
         print(f"  Ya descargado: {os.path.basename(dest)}")
         return dest
+
+    # Motor 0 (Turbo Instantáneo): Si obtener_info_video_directo ya obtuvo el link MP4 de TikWM/LoveTik, descargarlo sin doble llamada API
+    if direct_play_url:
+        try:
+            import urllib.request
+            print("  ⚡ Descarga Turbo Directa (reutilizando stream MP4 sin doble consulta API)...")
+            req_vid = urllib.request.Request(
+                direct_play_url,
+                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"},
+            )
+            with urllib.request.urlopen(req_vid, timeout=90) as r_vid, open(dest, "wb") as f_out:
+                while True:
+                    chunk = r_vid.read(65536)
+                    if not chunk:
+                        break
+                    f_out.write(chunk)
+            if os.path.exists(dest) and os.path.getsize(dest) > 100000:
+                mb = os.path.getsize(dest) / 1024 / 1024
+                print(f"  Descargado en modo Turbo: {os.path.basename(dest)} ({mb:.1f} MB)")
+                return dest
+        except Exception as e_fast:
+            print(f"  Aviso en descarga Turbo Directa: {e_fast}")
 
     out_tpl = os.path.join(REFS, slug + ".%(ext)s")
     # En la nube (GitHub Actions), TikWM HD descarga directo en 3 segundos sin sufrir el bloqueo/reintentos de yt-dlp
