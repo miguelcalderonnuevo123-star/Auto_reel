@@ -108,20 +108,19 @@ def generar_hook_con_gemini(raw_desc, api_key=None):
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {
             "temperature": 0.3,
-            "maxOutputTokens": 35
+            "maxOutputTokens": 600
         }
     }
 
     headers = {
-        "Content-Type": "application/json",
-        "x-goog-api-key": key
+        "Content-Type": "application/json"
     }
 
-    # Modelos compatibles con la nueva API de Google AI Studio en orden de velocidad y cuota
-    modelos = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b"]
+    # Modelos compatibles con la API de Google AI Studio en orden de velocidad y cuota
+    modelos = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash"]
 
     for mod in modelos:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent?key={key}"
         try:
             req = urllib.request.Request(
                 url,
@@ -129,9 +128,11 @@ def generar_hook_con_gemini(raw_desc, api_key=None):
                 headers=headers,
                 method="POST"
             )
-            with urllib.request.urlopen(req, timeout=5) as resp:
+            with urllib.request.urlopen(req, timeout=10) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
-                cand = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                parts = data["candidates"][0]["content"]["parts"]
+                text_parts = [p.get("text", "") for p in parts if not p.get("thought") and p.get("text")]
+                cand = (text_parts[-1] if text_parts else parts[-1].get("text", "")).strip()
                 cand = cand.replace('"', '').replace("'", '').replace("`", "").strip()
                 if "\n" in cand and "|" not in cand:
                     lines = [l.strip() for l in cand.split("\n") if l.strip()]
@@ -358,19 +359,18 @@ def generar_comentario_con_gemini(raw_desc, hook="", parte_num=1, tiene_partes=F
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {
             "temperature": 0.4,
-            "maxOutputTokens": 60
+            "maxOutputTokens": 600
         }
     }
 
     headers = {
-        "Content-Type": "application/json",
-        "x-goog-api-key": key
+        "Content-Type": "application/json"
     }
 
-    modelos = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b"]
+    modelos = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash"]
 
     for mod in modelos:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent?key={key}"
         try:
             req = urllib.request.Request(
                 url,
@@ -378,9 +378,11 @@ def generar_comentario_con_gemini(raw_desc, hook="", parte_num=1, tiene_partes=F
                 headers=headers,
                 method="POST"
             )
-            with urllib.request.urlopen(req, timeout=6) as resp:
+            with urllib.request.urlopen(req, timeout=10) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
-                cand = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                parts = data["candidates"][0]["content"]["parts"]
+                text_parts = [p.get("text", "") for p in parts if not p.get("thought") and p.get("text")]
+                cand = (text_parts[-1] if text_parts else parts[-1].get("text", "")).strip()
                 cand = cand.replace('"', '').replace("'", '').replace("`", "").strip()
                 cand = " ".join(cand.split())
                 if len(cand) >= 15:
@@ -458,17 +460,19 @@ def generar_copy_reel_con_gemini(raw_desc, hook="", cuenta_id="", hashtags_base=
 
         body = {
             "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0.4, "maxOutputTokens": 90}
+            "generationConfig": {"temperature": 0.4, "maxOutputTokens": 600}
         }
-        headers = {"Content-Type": "application/json", "x-goog-api-key": key}
-        modelos = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b"]
+        headers = {"Content-Type": "application/json"}
+        modelos = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash"]
         for mod in modelos:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent?key={key}"
             try:
                 req = urllib.request.Request(url, data=json.dumps(body).encode("utf-8"), headers=headers, method="POST")
-                with urllib.request.urlopen(req, timeout=6) as resp:
+                with urllib.request.urlopen(req, timeout=10) as resp:
                     data = json.loads(resp.read().decode("utf-8"))
-                    cand = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                    parts = data["candidates"][0]["content"]["parts"]
+                    text_parts = [p.get("text", "") for p in parts if not p.get("thought") and p.get("text")]
+                    cand = (text_parts[-1] if text_parts else parts[-1].get("text", "")).strip()
                     cand = cand.replace('"', '').replace("`", "").strip()
                     if len(cand) >= 20:
                         cuerpo_copy = cand

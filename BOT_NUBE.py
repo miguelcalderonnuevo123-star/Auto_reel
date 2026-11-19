@@ -1119,6 +1119,25 @@ def obtener_info_video_directo(url):
     except Exception:
         pass
 
+    # Respaldo 2 con LoveTik API si TikWM también falló
+    try:
+        r_lt = requests.post(
+            "https://lovetik.com/api/ajax/search",
+            data={"query": url},
+            headers={"User-Agent": "Mozilla/5.0", "Origin": "https://lovetik.com", "Referer": "https://lovetik.com/"},
+            timeout=15,
+        )
+        info_lt = r_lt.json() or {}
+        if info_lt.get("desc") or info_lt.get("vid"):
+            return {
+                "id": str(info_lt.get("vid") or vid_id),
+                "url": url,
+                "description": (info_lt.get("desc") or "").strip(),
+                "timestamp": int(time.time()),
+            }
+    except Exception:
+        pass
+
     return {
         "id": vid_id,
         "url": url,

@@ -170,8 +170,76 @@ def descargar_respaldo_tikwm(url, dest):
     return None
 
 
+def descargar_respaldo_espejo(url, dest):
+    """
+    Segundo motor espejo de respaldo (LoveTik / TiklyDown) sin marca de agua
+    si tanto yt-dlp como TikWM fallan o sufren límite temporal de peticiones.
+    """
+    import json
+    import urllib.parse
+    import urllib.request
+
+    print("  Probando motor de respaldo 3 (Servidor Espejo HD sin marca de agua)...")
+    espejos = [
+        (
+            "LoveTik",
+            "https://lovetik.com/api/ajax/search",
+            urllib.parse.urlencode({"query": url}).encode("utf-8"),
+            lambda d: next(
+                (x.get("a") for x in (d.get("links") or []) if x.get("a") and "mp3" not in str(x.get("t", "")).lower()),
+                None
+            ),
+        ),
+        (
+            "TiklyDown",
+            f"https://api.tiklydown.eu.org/api/download?url={urllib.parse.quote(url, safe='')}",
+            None,
+            lambda d: (d.get("video") or {}).get("noWatermark") or (d.get("video") or {}).get("watermark"),
+        ),
+    ]
+
+    for nombre_esp, api_url, body_data, extractor in espejos:
+        try:
+            req = urllib.request.Request(
+                api_url,
+                data=body_data,
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                    "Accept": "application/json",
+                    "Origin": "https://lovetik.com",
+                    "Referer": "https://lovetik.com/",
+                },
+            )
+            with urllib.request.urlopen(req, timeout=25) as resp:
+                res = json.loads(resp.read().decode("utf-8", errors="ignore"))
+
+            play_url = extractor(res)
+            if not play_url:
+                continue
+
+            req_vid = urllib.request.Request(
+                play_url,
+                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"},
+            )
+            with urllib.request.urlopen(req_vid, timeout=90) as r_vid, open(dest, "wb") as f_out:
+                while True:
+                    chunk = r_vid.read(65536)
+                    if not chunk:
+                        break
+                    f_out.write(chunk)
+
+            if os.path.exists(dest) and os.path.getsize(dest) > 100000:
+                mb = os.path.getsize(dest) / 1024 / 1024
+                print(f"  Descargado con espejo {nombre_esp}: {os.path.basename(dest)} ({mb:.1f} MB)")
+                return dest
+        except Exception as e_esp:
+            print(f"  Aviso en espejo {nombre_esp}: {e_esp}")
+            continue
+    return None
+
+
 def download(url, slug):
-    """Descarga a refs\\slug.mp4 con triple motor (yt-dlp sin/con cookies + TikWM API). Devuelve la ruta o None."""
+    """Descarga a refs\\slug.mp4 con cuádruple motor (yt-dlp + TikWM API + Espejos LoveTik/TiklyDown). Devuelve la ruta o None."""
     dest = os.path.join(REFS, slug + ".mp4")
     if os.path.exists(dest) and os.path.getsize(dest) > 100000:
         print(f"  Ya descargado: {os.path.basename(dest)}")
@@ -207,6 +275,11 @@ def download(url, slug):
     res_tikwm = descargar_respaldo_tikwm(url, dest)
     if res_tikwm:
         return res_tikwm
+
+    # Motor 3: Servidores Espejo (LoveTik / TiklyDown)
+    res_esp = descargar_respaldo_espejo(url, dest)
+    if res_esp:
+        return res_esp
 
     return None
 
