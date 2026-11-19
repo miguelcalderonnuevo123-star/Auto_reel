@@ -2,6 +2,7 @@
   "account_url": "https://www.tiktok.com/@helloword.visuals",
   "channel_id": "MS4wLjABAAAACLle2hko75dXsCGmRLFp0i-pA-FOH-Ds8uJ7Nr7ETr6Mt22MsXZYMKxKmRjH3R7K",
   "processed_ids": [
+    "7706975144052280598",
     "7707444873812512022",
     "7707356576339856662",
     "7596724827336019222",
@@ -114,9 +115,21 @@
     "le robó su piel para salir": 1,
     "conoce las frutas": 1,
     "verduras animadas zanahoria brócoli tomate maíz": 1,
-    "cargó 100 libras en cada mano": 2
+    "cargó 100 libras en cada mano": 2,
+    "lo que le pasó a historiasdefrutas": 1
   },
   "history": [
+    {
+      "id": "7706975144052280598",
+      "date": "2026-11-19 00:09:21",
+      "title": "Parte1#historiasdefrutas #dramadefrutass #mexico #historiasvirales #historias",
+      "hook": "LO QUE LE PASÓ A|HISTORIASDEFRUTAS",
+      "caption_ig": "🎬 LO QUE LE PASÓ A HISTORIASDEFRUTAS.\n\nLas cosas no siempre son lo que parecen... ¿Qué habrías hecho tú en esta situación? Te leo abajo 👇👀\n\n#aventuras #reels #viral #historiasdefrutas #dramadefrutass",
+      "accounts": [
+        "cuenta_1"
+      ],
+      "ig_link": "• @aventuras56_6: https://www.instagram.com/reel/Df5wZiUsoXl/"
+    },
     {
       "id": "7707444873812512022",
       "date": "2026-11-18 23:37:22",
@@ -868,7 +881,7 @@
     "frutnovelas777": 1794698751.277388,
     "novel_asanimadas": 1794669599.2287304,
     "novelas_frutosass": 1794703815.651194,
-    "cuenta_1": 1795045027.076395
+    "cuenta_1": 1795046952.9927194
   },
   "account_first_seen": {
     "frutnovelas776": 1794571550.604157,
@@ -878,6 +891,16 @@
     "cuenta_1": 1794789567.0865886
   },
   "huellas_videos": [
+    {
+      "id": "7706975144052280598",
+      "h": [
+        12506013525348899906,
+        8347007488240006711,
+        17407577499504102564
+      ],
+      "ts": 1795046961,
+      "date": "2026-11-19 00:09"
+    },
     {
       "id": "7707444873812512022",
       "h": [
@@ -1163,6 +1186,6 @@
     "cuenta_1": 1795048548.3801892
   },
   "account_style_rot": {
-    "cuenta_1": 7
+    "cuenta_1": 8
   }
 }
