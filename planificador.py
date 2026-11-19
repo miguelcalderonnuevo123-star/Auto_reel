@@ -86,6 +86,18 @@ def elegir_cuenta(marcar_intento=True, ahora_utc=None):
     if not cfg.get("activo", True):
         return "", "auto_diario desactivado en cuentas_granja.json"
 
+    # Solo activar piloto automático si el usuario dejó videos en cola_videos.txt (evita publicar videos al azar)
+    cola_path = os.path.join(BASE, "cola_videos.txt")
+    tiene_cola = False
+    if os.path.exists(cola_path):
+        try:
+            with open(cola_path, "r", encoding="utf-8") as fc:
+                tiene_cola = any(ln.strip() and not ln.strip().startswith("#") and "tiktok.com" in ln for ln in fc)
+        except Exception:
+            pass
+    if not tiene_cola:
+        return "", "cola_videos.txt vacía (control manual activo, 0 minutos gastados)"
+
     historial = _leer_json(HISTORIAL_PATH, {})
     ahora_utc = ahora_utc or datetime.now(timezone.utc).replace(tzinfo=None)
     off = float(cfg["zona_utc"])

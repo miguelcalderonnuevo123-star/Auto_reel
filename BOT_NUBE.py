@@ -1811,8 +1811,8 @@ def main():
                         quitar_de_cola(raw_cola_url or url_manual)
                     return 0
         pendientes = [elegido]
-    elif solo_telegram_y_cola:
-        print("  Revisión en la nube: No enviaste links nuevos a Telegram ni hay pendientes en cola_videos.txt. Saliendo sin descargar nada.")
+    elif solo_telegram_y_cola or auto_diario:
+        print("  [Piloto Automático] No hay videos pendientes en cola_videos.txt. Saliendo sin descargar videos al azar.")
         return 0
     else:
         videos = obtener_videos_recientes(
@@ -1925,7 +1925,11 @@ def main():
     slug = AUTO_REEL.slug_from_url(url, vid_id=vid_id)
     src = AUTO_REEL.download(url, slug)
     if not src:
-        msg_e = f"❌ No se pudo descargar el video de TikTok ({url}). Verifica que el link sea válido."
+        if viene_de_cola:
+            quitar_de_cola(raw_cola_url or url_manual)
+            msg_e = f"❌ No se pudo descargar el video de la cola ({url}). Lo retiré automáticamente de `cola_videos.txt` para no bloquear los siguientes videos."
+        else:
+            msg_e = f"❌ No se pudo descargar el video de TikTok ({url}). Verifica que el link sea válido."
         print(f"  {msg_e}")
         enviar_mensaje_telegram(chat_id_tg, msg_e)
         return 1
@@ -1934,6 +1938,8 @@ def main():
     v_meta = AUTO_REEL.get_video_meta(src) if hasattr(AUTO_REEL, "get_video_meta") else {}
     dur = (v_meta.get("duration") if v_meta else None) or AUTO_REEL.get_duration(src)
     if not dur:
+        if viene_de_cola:
+            quitar_de_cola(raw_cola_url or url_manual)
         msg_e = "❌ No se pudo medir la duración del video con FFmpeg."
         print(f"  {msg_e}")
         enviar_mensaje_telegram(chat_id_tg, msg_e)
