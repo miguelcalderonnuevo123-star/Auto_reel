@@ -186,15 +186,22 @@ def enviar_mensaje_telegram(chat_id, texto, botones=None):
     tok = obtener_token_telegram()
     if not tok or not chat_id:
         return
-    payload = {"chat_id": chat_id, "text": texto, "disable_web_page_preview": False}
+    payload = {"chat_id": chat_id, "text": texto, "parse_mode": "HTML", "disable_web_page_preview": False}
     if botones:
         payload["reply_markup"] = {"inline_keyboard": botones}
     try:
-        requests.post(
+        r = requests.post(
             f"https://api.telegram.org/bot{tok}/sendMessage",
             json=payload,
             timeout=15,
         )
+        if r.status_code != 200:
+            payload.pop("parse_mode", None)
+            requests.post(
+                f"https://api.telegram.org/bot{tok}/sendMessage",
+                json=payload,
+                timeout=15,
+            )
     except Exception as e:
         print(f"  Aviso Telegram: {e}")
 
@@ -880,7 +887,11 @@ def generar_teaser_historia(video_path, dur_seg=15.0):
 
         img.save(overlay_path, "PNG")
 
-        # 2. Cortar 15s con audio, ajustar a 1080x1920 y estampar el overlay
+        # 2. Cortar 15s con audio desde t=2.6s (evita encimar el cartel superior sobre el Hook inicial de 0-2.5s)
+        dur_real = AUTO_REEL.get_duration(video_path) or 30.0
+        t_start = 2.6 if dur_real >= 18.0 else 0.0
+        t_clip = min(15.0, max(5.0, dur_real - t_start))
+
         filter_str = (
             "[0:v]scale=1080:1920:force_original_aspect_ratio=decrease,"
             "pad=1080:1920:(ow-iw)/2:(oh-ih)/2[base];"
@@ -888,15 +899,15 @@ def generar_teaser_historia(video_path, dur_seg=15.0):
         )
         cmd = [
             AUTO_REEL.FFMPEG, "-y",
-            "-ss", "0.0",
-            "-t", f"{t_clip:.1f}",
             "-i", video_path,
             "-i", overlay_path,
+            "-ss", f"{t_start:.1f}",
+            "-t", f"{t_clip:.1f}",
             "-filter_complex", filter_str,
             "-map", "[v]",
             "-map", "0:a?",
-            "-c:v", "libx264", "-preset", "ultrafast", "-crf", "24",
-            "-b:v", "2000k", "-maxrate", "2400k", "-bufsize", "3500k",
+            "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23",
+            "-maxrate", "2500k", "-bufsize", "3800k",
             "-c:a", "aac", "-b:a", "128k",
             "-pix_fmt", "yuv420p",
             "-movflags", "+faststart",
