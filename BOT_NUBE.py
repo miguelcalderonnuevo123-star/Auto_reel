@@ -1741,6 +1741,22 @@ def main():
     if url_manual:
         print(f"  Procesando video elegido para [{cuenta_objetivo.upper()}] -> {url_manual}")
         elegido = obtener_info_video_directo(url_manual)
+        if not modo_previa and not modo_solo_render and cuenta_objetivo not in ("todas", "all"):
+            vid_chk = str(elegido.get("id") or "")
+            for h_item in (historial.get("history") or []):
+                if str(h_item.get("id") or "") == vid_chk and cuenta_objetivo in (h_item.get("accounts") or []) and h_item.get("ig_link"):
+                    chat_dup = chat_id_cli or cfg_seleccionada.get("owner_chat_id") or historial.get("telegram_chat_id")
+                    msg_dup = (
+                        f"🛡️ <b>Escudo Anti-Duplicados:</b> Este video (ID <code>{vid_chk}</code>) ya fue publicado anteriormente en <b>@{cuenta_objetivo}</b>.\n\n"
+                        f"🔗 <b>Publicación existente:</b>\n{h_item.get('ig_link')}\n\n"
+                        f"💡 <i>Si deseas subirlo a otra cuenta distinta de tu granja, selecciónala en los botones.</i>"
+                    )
+                    print(f"  [Anti-Duplicados] Video {vid_chk} ya publicado en @{cuenta_objetivo}. Omitiendo doble subida.")
+                    if chat_dup:
+                        enviar_mensaje_telegram(chat_dup, msg_dup)
+                    if viene_de_cola:
+                        quitar_de_cola(raw_cola_url or url_manual)
+                    return 0
         pendientes = [elegido]
     elif solo_telegram_y_cola:
         print("  Revisión en la nube: No enviaste links nuevos a Telegram ni hay pendientes en cola_videos.txt. Saliendo sin descargar nada.")
@@ -1952,7 +1968,7 @@ def main():
                 f"╔════════════════════════════════╗\n"
                 f"   🎬 VISTA PREVIA LISTA PARA REVISAR\n"
                 f"╚════════════════════════════════╝\n"
-                f"📌 <b>Hook:</b> {info['hook']}\n"
+                f"📌 <b>Hook Personalizado:</b> {info['hook']}\n"
                 f"⏱️ <b>Duración:</b> {dur:.1f}s | <b>Formato:</b> 1080x1920 HD\n"
                 f"🎯 <b>Portada:</b> Frame Hunter seleccionada\n"
                 f"🔗 <b>Fuente:</b> {url}\n\n"

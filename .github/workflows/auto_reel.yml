@@ -132,6 +132,9 @@ jobs:
               echo "🤖 PILOTO AUTOMATICO: publicando en @${{ steps.plan.outputs.cuenta }}..."
               python -u BOT_NUBE.py --cuenta "${{ steps.plan.outputs.cuenta }}" --auto-diario
             fi
+          elif [ "${{ github.event.client_payload.action_mode }}" = "reporte" ]; then
+            echo "🩺 CHEQUEO DE SALUD DE SESIONES SOLICITADO DESDE TELEGRAM..."
+            python -u BOT_NUBE.py --reporte
           elif [ "${{ github.event.action }}" = "cron_auto" ] || [ "${{ github.event.client_payload.action_mode }}" = "cron_auto" ]; then
             echo "🤖 PILOTO AUTOMATICO (Disparado por Cloudflare Smart Cron)..."
             python -u BOT_NUBE.py --auto-diario
