@@ -2,6 +2,7 @@
   "account_url": "https://www.tiktok.com/@helloword.visuals",
   "channel_id": "MS4wLjABAAAACLle2hko75dXsCGmRLFp0i-pA-FOH-Ds8uJ7Nr7ETr6Mt22MsXZYMKxKmRjH3R7K",
   "processed_ids": [
+    "7708596092362886422",
     "7708112490638478614",
     "7708560032559811862",
     "7707004008799718678",
@@ -122,9 +123,21 @@
     "lo que le pasó a historiasdefrutas": 1,
     "lo que le pasó a animacion 3 d": 1,
     "67 meses embarazada ganó los cien mil": 1,
-    "se comió a mi papá ahora voy": 1
+    "se comió a mi papá ahora voy": 1,
+    "el bebé mintió todo": 1
   },
   "history": [
+    {
+      "id": "7708596092362886422",
+      "date": "2026-11-20 02:58:56",
+      "title": "🥭🤰 ¡GANÓ $100,000 CON UNA PANZA DE 365 KG… PERO EL BEBÉ REVELÓ UN SECRETO! 😱💰 | PARTE 2 #HistoriasDeFrutas #Fruta #Animacion3D #HumorMexicano #ParaTi",
+      "hook": "EL BEBÉ|MINTIÓ TODO",
+      "caption_ig": "🎬 El bebé mintió todo.\n\nLas cosas no siempre son lo que parecen... ¿Qué habrías hecho tú en esta situación? Te leo abajo 👇👀\n\n#aventuras #reels #viral #secreto #Fruta",
+      "accounts": [
+        "cuenta_1"
+      ],
+      "ig_link": "• @aventuras56_6: https://www.instagram.com/reel/Df8opGkMDFI/"
+    },
     {
       "id": "7708112490638478614",
       "date": "2026-11-20 02:20:00",
@@ -920,7 +933,7 @@
     "frutnovelas777": 1794698751.277388,
     "novel_asanimadas": 1794669599.2287304,
     "novelas_frutosass": 1794703815.651194,
-    "cuenta_1": 1795141200.4116158
+    "cuenta_1": 1795143536.1445642
   },
   "account_first_seen": {
     "frutnovelas776": 1794571550.604157,
@@ -1233,6 +1246,6 @@
   ],
   "pausa_cuentas": {},
   "account_style_rot": {
-    "cuenta_1": 11
+    "cuenta_1": 12
   }
 }
