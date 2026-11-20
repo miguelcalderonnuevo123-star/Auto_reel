@@ -472,8 +472,8 @@ def build_filters(dur, hook, cta, zoom_w=1090, zoom_h=1939, cta_color="yellow", 
     # 1.5% de grano de sensor que rompe el hash perceptual por bloques de Meta
     noise_filt = "noise=alls=2:allf=t+u,"
 
-    # En la nube (Linux sin GPU), bilinear es 3x más rápido que bicubic y afir/volume es instantáneo frente a loudnorm de 2 pasadas
-    scale_flag = "bilinear" if os.name != "nt" else "bicubic"
+    # Escalado bicubic para máxima nitidez de rostros y bordes en 1080x1920 tanto en nube como en PC
+    scale_flag = "bicubic"
     audio_norm = "dynaudnorm=f=150:g=15" if os.name != "nt" else "loudnorm=I=-14:TP=-1.0:LRA=7"
 
     if is_vertical:
@@ -547,23 +547,18 @@ def render(src, dur, hook, cta, out_path, zoom_w=1090, zoom_h=1939, cta_color="y
             "-c:v", "h264_amf", "-quality", "speed", "-b:v", "3500k", "-maxrate", "4200k", "-bufsize", "6000k"]
         rc, out = run_ff(cmd)
 
-    # Estándar VBV Constrained CRF Turbo para Reels: peso ligero (~16-20 MB) y máxima nitidez HD en celulares
-    dur_seg = max(float(dur or 30.0), 10.0)
-    max_kbps = min(2100, max(1100, int((24 * 8 * 1024) / dur_seg) - 128))
-    maxrate_str = f"{max_kbps}k"
-    bufsize_str = f"{int(max_kbps * 1.52)}k"
+    # Estándar Master Full HD para Instagram Reels: preset veryfast (deblocking + CABAC + B-frames activos, CERO pixelado)
+    maxrate_str = "3800k"
+    bufsize_str = "6000k"
 
-    # 2) CPU (Modo Turbo VBV Constrained CRF: -crf 24 sin -b:v conflictivo)
+    # 2) CPU (Calidad Master Full HD sin -tune fastdecode ni -b:v conflictivo)
     if rc != 0 or not os.path.exists(out_path):
         if os.name == "nt":
             print("  GPU no disponible, usando CPU...")
         cmd = common[:]
-        is_cloud = os.environ.get("GITHUB_ACTIONS") == "true" or os.name != "nt"
-        preset_val = "ultrafast" if is_cloud else "veryfast"
-        crf_val = "24"
         cmd[cmd.index("-pix_fmt"):cmd.index("-pix_fmt")] = [
-            "-c:v", "libx264", "-preset", preset_val, "-tune", "fastdecode",
-            "-crf", crf_val, "-maxrate", maxrate_str, "-bufsize", bufsize_str, "-threads", "0"
+            "-c:v", "libx264", "-preset", "veryfast", "-profile:v", "high",
+            "-crf", "21", "-maxrate", maxrate_str, "-bufsize", bufsize_str, "-threads", "0"
         ]
         rc, out = run_ff(cmd)
 
@@ -574,7 +569,7 @@ def render(src, dur, hook, cta, out_path, zoom_w=1090, zoom_h=1939, cta_color="y
         cmd = common[:]
         cmd[cmd.index("-filter_complex") + 1] = fc_rel
         cmd[cmd.index("-pix_fmt"):cmd.index("-pix_fmt")] = [
-            "-c:v", "libx264", "-preset", "ultrafast", "-crf", "24",
+            "-c:v", "libx264", "-preset", "veryfast", "-profile:v", "high", "-crf", "21",
             "-maxrate", maxrate_str, "-bufsize", bufsize_str, "-threads", "0"
         ]
         rc, out = run_ff(cmd)
