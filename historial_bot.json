@@ -2,6 +2,7 @@
   "account_url": "https://www.tiktok.com/@helloword.visuals",
   "channel_id": "MS4wLjABAAAACLle2hko75dXsCGmRLFp0i-pA-FOH-Ds8uJ7Nr7ETr6Mt22MsXZYMKxKmRjH3R7K",
   "processed_ids": [
+    "7708112490638478614",
     "7708560032559811862",
     "7707004008799718678",
     "7706975144052280598",
@@ -120,9 +121,21 @@
     "cargó 100 libras en cada mano": 2,
     "lo que le pasó a historiasdefrutas": 1,
     "lo que le pasó a animacion 3 d": 1,
-    "67 meses embarazada ganó los cien mil": 1
+    "67 meses embarazada ganó los cien mil": 1,
+    "se comió a mi papá ahora voy": 1
   },
   "history": [
+    {
+      "id": "7708112490638478614",
+      "date": "2026-11-20 02:20:00",
+      "title": "🦗😱 ¡MI MAMÁ SE COMIÓ A MI PAPÁ Y AHORA ME TOCA A MÍ! 💀🌿  #Chapulines  #HistoriasVirales #Animacion3D #Humor #ParaTi",
+      "hook": "SE COMIÓ A MI PAPÁ|AHORA VOY",
+      "caption_ig": "Mi propia madre acaba de confesar que se comió a mi papá y ahora se dirige directo hacia mí para cenar. ¿Cómo se supone que escape de esto? Te leo en comentarios 👇😱\n\n#aventuras #reels #viral #Chapulines",
+      "accounts": [
+        "cuenta_1"
+      ],
+      "ig_link": "• @aventuras56_6: https://www.instagram.com/reel/Df8kJQqMqcV/"
+    },
     {
       "id": "7708560032559811862",
       "date": "2026-11-19 21:50:17",
@@ -907,7 +920,7 @@
     "frutnovelas777": 1794698751.277388,
     "novel_asanimadas": 1794669599.2287304,
     "novelas_frutosass": 1794703815.651194,
-    "cuenta_1": 1795125016.6929207
+    "cuenta_1": 1795141200.4116158
   },
   "account_first_seen": {
     "frutnovelas776": 1794571550.604157,
@@ -1220,6 +1233,6 @@
   ],
   "pausa_cuentas": {},
   "account_style_rot": {
-    "cuenta_1": 10
+    "cuenta_1": 11
   }
 }
