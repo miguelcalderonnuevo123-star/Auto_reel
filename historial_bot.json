@@ -2,6 +2,7 @@
   "account_url": "https://www.tiktok.com/@helloword.visuals",
   "channel_id": "MS4wLjABAAAACLle2hko75dXsCGmRLFp0i-pA-FOH-Ds8uJ7Nr7ETr6Mt22MsXZYMKxKmRjH3R7K",
   "processed_ids": [
+    "7702884254841163021",
     "7689424744738786592",
     "7708596092362886422",
     "7708112490638478614",
@@ -126,9 +127,21 @@
     "67 meses embarazada ganó los cien mil": 1,
     "se comió a mi papá ahora voy": 1,
     "el bebé mintió todo": 1,
-    "robó los deseos pagó el karma": 1
+    "robó los deseos pagó el karma": 1,
+    "se creía santa descubrieron su secreto": 1
   },
   "history": [
+    {
+      "id": "7702884254841163021",
+      "date": "2026-11-20 23:20:15",
+      "title": "La santa del pueblo tenía un secreto | Parte 1 Creado con @higgsfield.ai #Higgsfield  En este pueblo todos llevan un número en la frente y nadie puede esconderlo. Manzabel presume su 0 y juzga a todas… pero de noche se escapa por la ventana.  ¿Qué número tiene de verdad? 😱  Comenta qué crees que va a pasar con su mamá y espera la Parte 2. #FrutiNovela #LaSeñoritaCero #Telenovela #Drama",
+      "hook": "SE CREÍA SANTA|DESCUBRIERON SU SECRETO",
+      "caption_ig": "Todos la creían la más pura del pueblo por presumir su número, pero nadie sabe lo que hace escondidas en plena noche. ¿Qué número ocultará realmente bajo esa falsa inocencia? 👇\n\n#aventuras #reels #viral #secreto #Higgsfield",
+      "accounts": [
+        "cuenta_1"
+      ],
+      "ig_link": "• @aventuras56_6: https://www.instagram.com/reel/Df-0Xr_MJzA/"
+    },
     {
       "id": "7689424744738786592",
       "date": "2026-11-20 22:43:07",
@@ -946,7 +959,7 @@
     "frutnovelas777": 1794698751.277388,
     "novel_asanimadas": 1794669599.2287304,
     "novelas_frutosass": 1794703815.651194,
-    "cuenta_1": 1795214586.664323
+    "cuenta_1": 1795216815.4512591
   },
   "account_first_seen": {
     "frutnovelas776": 1794571550.604157,
@@ -1259,6 +1272,6 @@
   ],
   "pausa_cuentas": {},
   "account_style_rot": {
-    "cuenta_1": 13
+    "cuenta_1": 14
   }
 }
