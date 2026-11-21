@@ -2,6 +2,7 @@
   "account_url": "https://www.tiktok.com/@helloword.visuals",
   "channel_id": "MS4wLjABAAAACLle2hko75dXsCGmRLFp0i-pA-FOH-Ds8uJ7Nr7ETr6Mt22MsXZYMKxKmRjH3R7K",
   "processed_ids": [
+    "7691250554537807126",
     "7702884254841163021",
     "7689424744738786592",
     "7708596092362886422",
@@ -128,9 +129,21 @@
     "se comió a mi papá ahora voy": 1,
     "el bebé mintió todo": 1,
     "robó los deseos pagó el karma": 1,
-    "se creía santa descubrieron su secreto": 1
+    "se creía santa descubrieron su secreto": 1,
+    "el albañil pagó caro": 1
   },
   "history": [
+    {
+      "id": "7691250554537807126",
+      "date": "2026-11-21 03:03:25",
+      "title": "el albañil parte 1 #tendencia #viralvideos #foryourepage #novelas #onregardequoi #filmtok #frutinovela💙 #ToiplusMoi",
+      "hook": "EL ALBAÑIL|PAGÓ CARO",
+      "caption_ig": "Pensó que se saldría con la suya burlándose del cliente, pero ignoraba la brutal sorpresa que le esperaba al terminar el muro 😱 \n\n¿Habría merecido este castigo o se pasaron de la raya? Te leo en comentarios 👇\n\n#aventuras #reels #viral #onregardequoi #filmtok",
+      "accounts": [
+        "cuenta_1"
+      ],
+      "ig_link": "• @aventuras56_6: https://www.instagram.com/reel/Df_N5nDsLEx/"
+    },
     {
       "id": "7702884254841163021",
       "date": "2026-11-20 23:20:15",
@@ -959,7 +972,7 @@
     "frutnovelas777": 1794698751.277388,
     "novel_asanimadas": 1794669599.2287304,
     "novelas_frutosass": 1794703815.651194,
-    "cuenta_1": 1795216815.4512591
+    "cuenta_1": 1795230204.609711
   },
   "account_first_seen": {
     "frutnovelas776": 1794571550.604157,
@@ -1272,6 +1285,6 @@
   ],
   "pausa_cuentas": {},
   "account_style_rot": {
-    "cuenta_1": 14
+    "cuenta_1": 15
   }
 }
